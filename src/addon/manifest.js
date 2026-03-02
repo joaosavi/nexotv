@@ -26,7 +26,11 @@ function createManifest() {
             configurable: true,
             configurationRequired: true
         },
-        ...(env.ADDON_LOGO_URL ? { logo: env.ADDON_LOGO_URL } : {})
+        ...(env.ADDON_LOGO_URL ? { logo: env.ADDON_LOGO_URL } : {}),
+        stremioAddonsConfig: {
+            issuer: "https://stremio-addons.net",
+            signature: "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..xRFUl1vjkSQB9xNaGVsLQQ.sSG6y5Ldrq1G6vd4Ba0b56pUGBoxQjgIO-v5UKyU5YLGqCtgqPC6WpLc66fllXM2sl_5YhtmB5vy6qDD1PUWDiKT-K-yTqdhf7wE75w_qOLTE9lzZa7EAHJYGfzG4elW.SzmePMUqyIUkasul_4nVzg"
+        }
     };
 }
 
