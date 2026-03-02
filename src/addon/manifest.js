@@ -24,7 +24,7 @@ function createManifest() {
         idPrefixes: ['iptv_'],
         behaviorHints: {
             configurable: true,
-            configurationRequired: false
+            configurationRequired: true
         },
         ...(env.ADDON_LOGO_URL ? { logo: env.ADDON_LOGO_URL } : {})
     };
