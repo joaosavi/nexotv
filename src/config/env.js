@@ -12,6 +12,6 @@ module.exports = {
     PREFETCH_MAX_BYTES: parseInt(process.env.PREFETCH_MAX_BYTES || '150000000', 10),
     ADDON_NAME: process.env.ADDON_NAME || 'IPTV Stremio Addon',
     ADDON_DESCRIPTION: process.env.ADDON_DESCRIPTION || 'Stream your IPTV channels in Stremio',
-    ADDON_LOGO_URL: process.env.ADDON_LOGO_URL || '',
+    ADDON_LOGO_URL: process.env.ADDON_LOGO_URL || 'https://i.imgur.com/vN5tLuv.jpeg',
     CONFIG_SECRET: process.env.CONFIG_SECRET || null,
 };
