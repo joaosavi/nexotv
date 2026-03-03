@@ -1,0 +1,162 @@
+diff --git a/.env.example b/.env.example
+index 61c358f..8a41459 100644
+--- a/.env.example
++++ b/.env.example
+@@ -5,6 +5,12 @@ ADDON_DESCRIPTION=Stream your IPTV channels in Stremio
+ # Optional: URL of a logo/icon image to display in Stremio (leave commented out to disable)
+ # ADDON_LOGO_URL=https://example.com/logo.png
+ 
++# Enable/disable logo proxy resizing to enforce Stremio 2:3 aspect ratio
++LOGO_RESIZE_ENABLED=true
++
++# Enable/disable Cache-Control headers on proxied logos
++LOGO_CACHE_ENABLED=true
++
+ # Port to run the HTTP server on
+ PORT=7000
+ 
+diff --git a/README.md b/README.md
+index 1f4f474..c6e51f6 100644
+--- a/README.md
++++ b/README.md
+@@ -93,6 +93,8 @@ services:
+ | `ADDON_NAME` | `IPTV Stremio Addon` | Addon name shown in Stremio |
+ | `ADDON_DESCRIPTION` | `Stream your IPTV channels in Stremio` | Addon description shown in Stremio |
+ | `ADDON_LOGO_URL` | *(unset)* | URL for the addon logo in Stremio |
++| `LOGO_RESIZE_ENABLED` | `true` | Wrap logos in wsrv.nl proxy to enforce 2:3 aspect ratio |
++| `LOGO_CACHE_ENABLED` | `true` | Apply Cache-Control headers to logo proxy responses |
+ 
+ ---
+ 
+diff --git a/src/addon/M3UEPGAddon.js b/src/addon/M3UEPGAddon.js
+index b975657..5e1bbea 100644
+--- a/src/addon/M3UEPGAddon.js
++++ b/src/addon/M3UEPGAddon.js
+@@ -136,12 +136,23 @@ class M3UEPGAddon {
+     }
+ 
+     deriveFallbackLogoUrl(item) {
++        let finalUrl;
+         const logoAttr = item.attributes?.['tvg-logo'];
+-        if (logoAttr && logoAttr.trim()) return logoAttr;
+-        const tvgId = item.attributes?.['tvg-id'] || item.attributes?.['tvg-name'];
+-        if (!tvgId)
+-            return `https://via.placeholder.com/300x400/333333/FFFFFF?text=${encodeURIComponent(item.name)}`;
+-        return `logo/${encodeURIComponent(tvgId)}.png`;
++        if (logoAttr && logoAttr.trim()) {
++            finalUrl = logoAttr;
++        } else {
++            const tvgId = item.attributes?.['tvg-id'] || item.attributes?.['tvg-name'];
++            if (!tvgId) {
++                finalUrl = `https://via.placeholder.com/250x375/333333/FFFFFF?text=${encodeURIComponent(item.name)}`;
++            } else {
++                finalUrl = `logo/${encodeURIComponent(tvgId)}.png`;
++            }
++        }
++
++        if (env.LOGO_RESIZE_ENABLED && finalUrl.startsWith('http') && !finalUrl.includes('wsrv.nl')) {
++            return `https://wsrv.nl/?url=${encodeURIComponent(finalUrl)}&w=250&h=375&fit=contain&bg=black`;
++        }
++        return finalUrl;
+     }
+ 
+     generateMetaPreview(item) {
+diff --git a/src/config/env.js b/src/config/env.js
+index 592106e..ff28068 100644
+--- a/src/config/env.js
++++ b/src/config/env.js
+@@ -13,5 +13,7 @@ module.exports = {
+     ADDON_NAME: process.env.ADDON_NAME || 'IPTV Stremio Addon',
+     ADDON_DESCRIPTION: process.env.ADDON_DESCRIPTION || 'Stream your IPTV channels in Stremio',
+     ADDON_LOGO_URL: process.env.ADDON_LOGO_URL || 'https://i.imgur.com/vN5tLuv.jpeg',
++    LOGO_RESIZE_ENABLED: (process.env.LOGO_RESIZE_ENABLED || 'true').toLowerCase() !== 'false',
++    LOGO_CACHE_ENABLED: (process.env.LOGO_CACHE_ENABLED || 'true').toLowerCase() !== 'false',
+     CONFIG_SECRET: process.env.CONFIG_SECRET || null,
+ };
+diff --git a/src/routes/logo.js b/src/routes/logo.js
+index ee7a1f3..8f60c52 100644
+--- a/src/routes/logo.js
++++ b/src/routes/logo.js
+@@ -1,14 +1,15 @@
+ const { Router } = require('express');
++const env = require('../config/env');
+ 
+ const router = Router();
+ 
+ router.get('/:token/logo/:tvgId.png', async (req, res) => {
+     if (!req.addonInterface) {
+-        return res.redirect(`https://via.placeholder.com/300x400/333333/FFFFFF?text=${encodeURIComponent(req.params.tvgId)}`);
++        return res.redirect(`https://via.placeholder.com/250x375/333333/FFFFFF?text=${encodeURIComponent(req.params.tvgId)}`);
+     }
+     const sources = req.addonInterface._logoSources || [];
+     if (!sources.length) {
+-        return res.redirect(`https://via.placeholder.com/300x400/333333/FFFFFF?text=${encodeURIComponent(req.params.tvgId)}`);
++        return res.redirect(`https://via.placeholder.com/250x375/333333/FFFFFF?text=${encodeURIComponent(req.params.tvgId)}`);
+     }
+     const { tvgId } = req.params;
+     const rawId = tvgId;
+@@ -23,6 +24,7 @@ router.get('/:token/logo/:tvgId.png', async (req, res) => {
+                 const headCtrl = new AbortController();
+                 const headTimer = setTimeout(() => headCtrl.abort(), 7000);
+                 let head;
++                let methodUsed = 'HEAD';
+                 try {
+                     head = await fetch(url, { method: 'HEAD', signal: headCtrl.signal });
+                 } finally {
+@@ -33,6 +35,7 @@ router.get('/:token/logo/:tvgId.png', async (req, res) => {
+                     const getTimer = setTimeout(() => getCtrl.abort(), 10000);
+                     try {
+                         head = await fetch(url, { method: 'GET', signal: getCtrl.signal });
++                        methodUsed = 'GET';
+                     } finally {
+                         clearTimeout(getTimer);
+                     }
+@@ -40,18 +43,42 @@ router.get('/:token/logo/:tvgId.png', async (req, res) => {
+                 if (head.ok) {
+                     const len = parseInt(head.headers.get('content-length'), 10);
+                     if (isNaN(len) || len > 50) {
+-                        // Cancel the response stream if any (for GET requests) to avoid memory leaks
+-                        if (head.body) {
+-                            try { await head.body.cancel(); } catch (e) { /* ignore */ }
++                        if (env.LOGO_RESIZE_ENABLED === true) {
++                            if (head.body) {
++                                try { await head.body.cancel(); } catch (e) { /* ignore */ }
++                            }
++                            const wsrvUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=250&h=375&fit=contain&bg=black`;
++                            return res.redirect(wsrvUrl);
++                        } else if (env.LOGO_CACHE_ENABLED === true) {
++                            let resResponse = head;
++                            if (methodUsed === 'HEAD') {
++                                const getCtrl = new AbortController();
++                                const getTimer = setTimeout(() => getCtrl.abort(), 10000);
++                                try {
++                                    resResponse = await fetch(url, { method: 'GET', signal: getCtrl.signal });
++                                } finally {
++                                    clearTimeout(getTimer);
++                                }
++                            }
++                            const ct = resResponse.headers.get('content-type') || 'image/png';
++                            const buf = Buffer.from(await resResponse.arrayBuffer());
++                            if (buf.length > 50) {
++                                res.setHeader('Content-Type', ct);
++                                res.setHeader('Cache-Control', 'public, max-age=21600');
++                                return res.end(buf);
++                            }
++                        } else {
++                            if (head.body) {
++                                try { await head.body.cancel(); } catch (e) { /* ignore */ }
++                            }
++                            return res.redirect(url);
+                         }
+-                        const wsrvUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=250&h=375&fit=contain&bg=black`;
+-                        return res.redirect(wsrvUrl);
+                     }
+                 }
+             } catch { /* continue */ }
+         }
+     }
+-    res.redirect(`https://via.placeholder.com/300x400/333333/FFFFFF?text=${encodeURIComponent(noCountry.toUpperCase().slice(0, 12))}`);
++    res.redirect(`https://via.placeholder.com/250x375/333333/FFFFFF?text=${encodeURIComponent(noCountry.toUpperCase().slice(0, 12))}`);
+ });
+ 
+ module.exports = router;

@@ -136,12 +136,23 @@ class M3UEPGAddon {
     }
 
     deriveFallbackLogoUrl(item) {
+        let finalUrl;
         const logoAttr = item.attributes?.['tvg-logo'];
-        if (logoAttr && logoAttr.trim()) return logoAttr;
-        const tvgId = item.attributes?.['tvg-id'] || item.attributes?.['tvg-name'];
-        if (!tvgId)
-            return `https://via.placeholder.com/300x400/333333/FFFFFF?text=${encodeURIComponent(item.name)}`;
-        return `logo/${encodeURIComponent(tvgId)}.png`;
+        if (logoAttr && logoAttr.trim()) {
+            finalUrl = logoAttr;
+        } else {
+            const tvgId = item.attributes?.['tvg-id'] || item.attributes?.['tvg-name'];
+            if (!tvgId) {
+                finalUrl = `https://via.placeholder.com/250x375/333333/FFFFFF?text=${encodeURIComponent(item.name)}`;
+            } else {
+                finalUrl = `logo/${encodeURIComponent(tvgId)}.png`;
+            }
+        }
+
+        if (env.LOGO_RESIZE_ENABLED && finalUrl.startsWith('http') && !finalUrl.includes('wsrv.nl')) {
+            return `https://wsrv.nl/?url=${encodeURIComponent(finalUrl)}&w=250&h=375&fit=contain&bg=black`;
+        }
+        return finalUrl;
     }
 
     generateMetaPreview(item) {

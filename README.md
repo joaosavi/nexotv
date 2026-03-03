@@ -93,6 +93,8 @@ services:
 | `ADDON_NAME` | `IPTV Stremio Addon` | Addon name shown in Stremio |
 | `ADDON_DESCRIPTION` | `Stream your IPTV channels in Stremio` | Addon description shown in Stremio |
 | `ADDON_LOGO_URL` | *(unset)* | URL for the addon logo in Stremio |
+| `LOGO_RESIZE_ENABLED` | `true` | Wrap logos in wsrv.nl proxy to enforce 2:3 aspect ratio |
+| `LOGO_CACHE_ENABLED` | `true` | Apply Cache-Control headers to logo proxy responses |
 
 ---
 
