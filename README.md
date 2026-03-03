@@ -8,12 +8,13 @@
 ## ✨ Features
 
 - 📺 Live TV channels via **Xtream Codes JSON API**
-- 📡 EPG support: panel XMLTV or custom XMLTV URL, with timezone offset support
+- 📡 EPG support: panel XMLTV or custom XMLTV URL, with timezone offset support, pruned and optimized for low memory and CPU footprint
 - 🔍 Category-based browsing + channel search
 - 🔐 Config tokens: base64-encoded (plain) or AES-256-GCM encrypted (with `CONFIG_SECRET`)
 - ⚡ In-memory LRU cache with configurable TTL and entry cap
-- 🖼️ Channel logo proxy with multi-source fallback
+- 🖼️ Configurable Channel logo proxy with multi-source fallback, optional resizing and caching
 - 🛡️ SSRF-protected server-side CORS bypass proxy for pre-flight validation
+- 🛑 Hybrid Rate Limiting to prevent API abuse (Global IP & Token-based)
 
 ---
 
@@ -62,6 +63,10 @@ services:
       DEBUG_MODE: "false"
       ADDON_NAME: "My IPTV Addon"
       ADDON_DESCRIPTION: "My personal IPTV channels"
+      LOGO_RESIZE_ENABLED: "true"
+      LOGO_CACHE_ENABLED: "true"
+      IP_RATE_LIMIT_ENABLED: "true"
+      TOKEN_RATE_LIMIT_ENABLED: "true"
     ports:
       - "7000:7000"
 ```
@@ -95,6 +100,12 @@ services:
 | `ADDON_LOGO_URL` | *(unset)* | URL for the addon logo in Stremio |
 | `LOGO_RESIZE_ENABLED` | `true` | Wrap logos in wsrv.nl proxy to enforce 2:3 aspect ratio |
 | `LOGO_CACHE_ENABLED` | `true` | Apply Cache-Control headers to logo proxy responses |
+| `IP_RATE_LIMIT_ENABLED` | `true` | Enable global IP-based rate limiting |
+| `IP_RATE_LIMIT_WINDOW_MS` | `300000` (5m) | Window in ms for IP rate limit |
+| `IP_RATE_LIMIT_MAX` | `300` | Max requests per window for IP rate limit |
+| `TOKEN_RATE_LIMIT_ENABLED` | `true` | Enable token-based rate limiting for addon routes |
+| `TOKEN_RATE_LIMIT_WINDOW_MS` | `60000` (1m) | Window in ms for token rate limit |
+| `TOKEN_RATE_LIMIT_MAX` | `60` | Max requests per window for token rate limit |
 
 ---
 
@@ -157,6 +168,7 @@ Stremio Client  (Catalog / Meta / Stream)
 | Token leakage | base64 (plain) or AES-256-GCM (with `CONFIG_SECRET`) |
 | Credential exposure | Warn shown in UI when `CONFIG_SECRET` is not configured |
 | EPG size | `PREFETCH_MAX_BYTES` limits response size |
+| API Abuse | Global IP and Token-based Rate Limiting to prevent scraping or DoS |
 
 ---
 
