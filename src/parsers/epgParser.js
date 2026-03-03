@@ -14,7 +14,12 @@ async function parseEPG(content, log) {
         const result = await parser.parseStringPromise(content);
         const epgData = {};
         if (result.tv && result.tv.programme) {
+            const cutoff = Date.now() - 3600 * 1000; // 1 hour ago
+            const nowTime = Date.now();
             for (const prog of result.tv.programme) {
+                const stopDate = parseEPGTime(prog.$.stop);
+                if (stopDate.getTime() < cutoff) continue;
+
                 const ch = prog.$.channel;
                 if (!epgData[ch]) epgData[ch] = [];
                 epgData[ch].push({
@@ -22,6 +27,19 @@ async function parseEPG(content, log) {
                     stop: prog.$.stop,
                     title: prog.title ? prog.title[0]._ || prog.title[0] : 'Unknown',
                     desc: prog.desc ? prog.desc[0]._ || prog.desc[0] : ''
+                });
+            }
+
+            for (const ch in epgData) {
+                epgData[ch].sort((a, b) => parseEPGTime(a.start).getTime() - parseEPGTime(b.start).getTime());
+                let futureCount = 0;
+                epgData[ch] = epgData[ch].filter(p => {
+                    const startTime = parseEPGTime(p.start).getTime();
+                    if (startTime > nowTime) {
+                        if (futureCount >= 5) return false;
+                        futureCount++;
+                    }
+                    return true;
                 });
             }
         }

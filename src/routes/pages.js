@@ -30,6 +30,11 @@ router.get('/:token/configure-xtream', (req, res) => {
 
 router.get('/manifest.json', (req, res) => {
     const manifest = createManifest();
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     res.json(manifest);
 });
 

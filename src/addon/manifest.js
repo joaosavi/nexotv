@@ -29,7 +29,7 @@ function createManifest() {
         ...(env.ADDON_LOGO_URL ? { logo: env.ADDON_LOGO_URL } : {}),
         stremioAddonsConfig: {
             issuer: "https://stremio-addons.net",
-            signature: "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..xRFUl1vjkSQB9xNaGVsLQQ.sSG6y5Ldrq1G6vd4Ba0b56pUGBoxQjgIO-v5UKyU5YLGqCtgqPC6WpLc66fllXM2sl_5YhtmB5vy6qDD1PUWDiKT-K-yTqdhf7wE75w_qOLTE9lzZa7EAHJYGfzG4elW.SzmePMUqyIUkasul_4nVzg"
+            signature: "eyJhbGciOiJkaXIiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0..bAAYu9Z2x2hZNnFslnPZXw.7K1l8Ytr4oH3kqcKtpS0U90IrquPapWIhFFhhGjGGdIudpMDxzCydsYbVl1uM-AW5vOhbtk_eGkmHcgJDjXg4Ak7ui8YLdznuC5j6TEiQC2Wjf9CoCtjiSijy0VFzPXT.NH78pw2334jBBHDCxmgmUQ"
         }
     };
 }

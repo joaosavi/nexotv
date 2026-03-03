@@ -11,6 +11,11 @@ app.use(express.json({ limit: '512kb' }));
 
 app.use((req, res, next) => {
     res.setHeader('X-App', 'IPTV-Stremio-Addon');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
     next();
 });
 

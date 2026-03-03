@@ -38,12 +38,14 @@ router.get('/:token/logo/:tvgId.png', async (req, res) => {
                     }
                 }
                 if (head.ok) {
-                    const buf = Buffer.from(await head.arrayBuffer());
-                    if (buf.length > 50) {
-                        const ct = head.headers.get('content-type') || 'image/png';
-                        res.setHeader('Content-Type', ct);
-                        res.setHeader('Cache-Control', 'public, max-age=21600');
-                        return res.end(buf);
+                    const len = parseInt(head.headers.get('content-length'), 10);
+                    if (isNaN(len) || len > 50) {
+                        // Cancel the response stream if any (for GET requests) to avoid memory leaks
+                        if (head.body) {
+                            try { await head.body.cancel(); } catch (e) { /* ignore */ }
+                        }
+                        const wsrvUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=250&h=375&fit=contain&bg=black`;
+                        return res.redirect(wsrvUrl);
                     }
                 }
             } catch { /* continue */ }
