@@ -1,5 +1,6 @@
 const { Router } = require('express');
 const { getRouter } = require('stremio-addon-sdk');
+const { tokenLimiter } = require('../middleware/rateLimiter');
 const crypto = require('crypto');
 const { tryParseConfigToken } = require('../utils/cryptoConfig');
 const createAddon = require('../addon/builder');
@@ -66,7 +67,7 @@ router.use('/:token', async (req, res, next) => {
 router.use(require('./logo'));
 
 // Custom manifest route — bypasses the SDK's ~8KB frozen manifest limit
-router.get('/:token/manifest.json', (req, res) => {
+router.get('/:token/manifest.json', tokenLimiter, (req, res) => {
     const iface = req.addonInterface;
     if (!iface) return res.status(500).json({ error: 'Interface not ready' });
     const manifest = JSON.parse(JSON.stringify(iface.manifest));
@@ -83,7 +84,7 @@ router.get('/:token/manifest.json', (req, res) => {
 });
 
 // Stremio router
-router.use('/:token', (req, res, next) => {
+router.use('/:token', tokenLimiter, (req, res, next) => {
 
     const iface = req.addonInterface;
     if (!iface) return res.status(500).json({ error: 'Interface not ready' });

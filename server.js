@@ -6,8 +6,12 @@ const env = require('./src/config/env');
 const app = express();
 const staticDir = path.join(__dirname, 'public');
 
+app.set('trust proxy', 1);
 app.use(express.static(staticDir));
 app.use(express.json({ limit: '512kb' }));
+
+const { globalIpLimiter } = require('./src/middleware/rateLimiter');
+app.use(globalIpLimiter);
 
 app.use((req, res, next) => {
     res.setHeader('X-App', 'IPTV-Stremio-Addon');

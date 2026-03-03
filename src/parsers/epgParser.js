@@ -20,21 +20,23 @@ async function parseEPG(content, log) {
                 const stopDate = parseEPGTime(prog.$.stop);
                 if (stopDate.getTime() < cutoff) continue;
 
+                const startDate = parseEPGTime(prog.$.start);
+
                 const ch = prog.$.channel;
                 if (!epgData[ch]) epgData[ch] = [];
                 epgData[ch].push({
-                    start: prog.$.start,
-                    stop: prog.$.stop,
+                    start: startDate.getTime(),
+                    stop: stopDate.getTime(),
                     title: prog.title ? prog.title[0]._ || prog.title[0] : 'Unknown',
                     desc: prog.desc ? prog.desc[0]._ || prog.desc[0] : ''
                 });
             }
 
             for (const ch in epgData) {
-                epgData[ch].sort((a, b) => parseEPGTime(a.start).getTime() - parseEPGTime(b.start).getTime());
+                epgData[ch].sort((a, b) => a.start - b.start);
                 let futureCount = 0;
                 epgData[ch] = epgData[ch].filter(p => {
-                    const startTime = parseEPGTime(p.start).getTime();
+                    const startTime = p.start;
                     if (startTime > nowTime) {
                         if (futureCount >= 5) return false;
                         futureCount++;
@@ -102,12 +104,14 @@ function parseEPGTime(s, epgOffsetHours = 0) {
  */
 function getCurrentProgram(epgData, channelId, epgOffsetHours = 0) {
     if (!channelId || !epgData[channelId]) return null;
-    const now = new Date();
+    const nowTime = Date.now();
     for (const p of epgData[channelId]) {
-        const start = parseEPGTime(p.start, epgOffsetHours);
-        const stop = parseEPGTime(p.stop, epgOffsetHours);
-        if (now >= start && now <= stop) {
-            return { title: p.title, description: p.desc, start, stop, startTime: start, stopTime: stop };
+        const start = p.start + (epgOffsetHours * 3600000);
+        const stop = p.stop + (epgOffsetHours * 3600000);
+        if (nowTime >= start && nowTime <= stop) {
+            const startDate = new Date(start);
+            const stopDate = new Date(stop);
+            return { title: p.title, description: p.desc, start: startDate, stop: stopDate, startTime: startDate, stopTime: stopDate };
         }
     }
     return null;
@@ -123,20 +127,20 @@ function getCurrentProgram(epgData, channelId, epgOffsetHours = 0) {
  */
 function getUpcomingPrograms(epgData, channelId, limit = 5, epgOffsetHours = 0) {
     if (!channelId || !epgData[channelId]) return [];
-    const now = new Date();
+    const nowTime = Date.now();
     const upcoming = [];
     for (const p of epgData[channelId]) {
-        const start = parseEPGTime(p.start, epgOffsetHours);
-        if (start > now && upcoming.length < limit) {
+        const start = p.start + (epgOffsetHours * 3600000);
+        if (start > nowTime && upcoming.length < limit) {
             upcoming.push({
                 title: p.title,
                 description: p.desc,
-                startTime: start,
-                stopTime: parseEPGTime(p.stop, epgOffsetHours)
+                startTime: new Date(start),
+                stopTime: new Date(p.stop + (epgOffsetHours * 3600000))
             });
         }
     }
-    return upcoming.sort((a, b) => a.startTime - b.startTime);
+    return upcoming.sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
 }
 
 module.exports = { parseEPG, parseEPGTime, getCurrentProgram, getUpcomingPrograms };

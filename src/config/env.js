@@ -16,4 +16,10 @@ module.exports = {
     LOGO_RESIZE_ENABLED: (process.env.LOGO_RESIZE_ENABLED || 'true').toLowerCase() !== 'false',
     LOGO_CACHE_ENABLED: (process.env.LOGO_CACHE_ENABLED || 'true').toLowerCase() !== 'false',
     CONFIG_SECRET: process.env.CONFIG_SECRET || null,
+    IP_RATE_LIMIT_ENABLED: (process.env.IP_RATE_LIMIT_ENABLED || 'true').toLowerCase() !== 'false',
+    IP_RATE_LIMIT_WINDOW_MS: parseInt(process.env.IP_RATE_LIMIT_WINDOW_MS || '300000', 10),
+    IP_RATE_LIMIT_MAX: parseInt(process.env.IP_RATE_LIMIT_MAX || '300', 10),
+    TOKEN_RATE_LIMIT_ENABLED: (process.env.TOKEN_RATE_LIMIT_ENABLED || 'true').toLowerCase() !== 'false',
+    TOKEN_RATE_LIMIT_WINDOW_MS: parseInt(process.env.TOKEN_RATE_LIMIT_WINDOW_MS || '60000', 10),
+    TOKEN_RATE_LIMIT_MAX: parseInt(process.env.TOKEN_RATE_LIMIT_MAX || '60', 10),
 };

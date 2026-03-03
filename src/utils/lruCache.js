@@ -8,17 +8,7 @@ class LRUCache {
 
     _now() { return Date.now(); }
 
-    _pruneExpired() {
-        const now = this._now();
-        for (const [k, v] of this.map.entries()) {
-            if (v.expires && v.expires < now) {
-                this.map.delete(k);
-            }
-        }
-    }
-
     get(key) {
-        this._pruneExpired();
         if (!this.map.has(key)) return undefined;
         const entry = this.map.get(key);
         if (entry.expires && entry.expires < this._now()) {
@@ -32,7 +22,6 @@ class LRUCache {
     }
 
     set(key, value) {
-        this._pruneExpired();
         if (this.map.has(key)) this.map.delete(key);
         this.map.set(key, { value, expires: this.ttl ? this._now() + this.ttl : null });
         // Evict LRU
@@ -51,7 +40,6 @@ class LRUCache {
     }
 
     keys() {
-        this._pruneExpired();
         return Array.from(this.map.keys());
     }
 
