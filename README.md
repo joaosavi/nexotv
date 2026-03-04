@@ -11,7 +11,7 @@
 - 📡 EPG support: panel XMLTV or custom XMLTV URL, with timezone offset support, pruned and optimized for low memory and CPU footprint
 - 🔍 Category-based browsing + channel search
 - 🔐 Config tokens: base64-encoded (plain) or AES-256-GCM encrypted (with `CONFIG_SECRET`)
-- ⚡ In-memory LRU cache with configurable TTL and entry cap
+- ⚡ Persistent SQLite cache with gzip compression, configurable TTL, and automatic garbage collection
 - 🖼️ Configurable Channel logo proxy with multi-source fallback, optional resizing and caching
 - 🛡️ SSRF-protected server-side CORS bypass proxy for pre-flight validation
 - 🛑 Hybrid Rate Limiting to prevent API abuse (Global IP & Token-based)
@@ -40,6 +40,7 @@ docker run -d \
   -e PORT=7000 \
   -e DEBUG_MODE=false \
   -e CACHE_ENABLED=true \
+  -v ./iptv_data:/app/data \
   -p 7000:7000 \
   --name iptv-addon \
   iptv-stremio-addon
@@ -52,21 +53,10 @@ services:
   addon:
     build: .
     restart: unless-stopped
-    environment:
-      PORT: 7000
-      CACHE_ENABLED: "true"
-      CACHE_TTL_MS: 21600000
-      MAX_CACHE_ENTRIES: 300
-      PREFETCH_ENABLED: "true"
-      PREFETCH_MAX_BYTES: 150000000
-      CONFIG_SECRET: "generate_a_long_random_string_here"
-      DEBUG_MODE: "false"
-      ADDON_NAME: "My IPTV Addon"
-      ADDON_DESCRIPTION: "My personal IPTV channels"
-      LOGO_RESIZE_ENABLED: "true"
-      LOGO_CACHE_ENABLED: "true"
-      IP_RATE_LIMIT_ENABLED: "true"
-      TOKEN_RATE_LIMIT_ENABLED: "true"
+    env_file:
+      - .env
+    volumes:
+      - ./iptv_data:/app/data
     ports:
       - "7000:7000"
 ```
@@ -88,9 +78,10 @@ services:
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `7000` | HTTP server port |
-| `CACHE_ENABLED` | `true` | Enable/disable LRU caching |
+| `CACHE_ENABLED` | `true` | Enable/disable persistent SQLite caching |
 | `CACHE_TTL_MS` | `21600000` (6h) | Cache TTL in milliseconds |
-| `MAX_CACHE_ENTRIES` | `300` | LRU max entries |
+| `MAX_CACHE_ENTRIES` | `300` | Max in-memory entries (build/interface caches) |
+| `SQLITE_PATH` | `./data/cache.sqlite` | Path to the SQLite cache database file |
 | `CONFIG_SECRET` | *(unset)* | Enables AES-256-GCM encryption for tokens (must be ≥16 chars). Without this, tokens are plain base64. |
 | `DEBUG_MODE` | `false` | Enable verbose debug logging |
 | `PREFETCH_ENABLED` | `true` | Enable server-side CORS bypass for pre-flight |
@@ -106,6 +97,8 @@ services:
 | `TOKEN_RATE_LIMIT_ENABLED` | `true` | Enable token-based rate limiting for addon routes |
 | `TOKEN_RATE_LIMIT_WINDOW_MS` | `60000` (1m) | Window in ms for token rate limit |
 | `TOKEN_RATE_LIMIT_MAX` | `60` | Max requests per window for token rate limit |
+| `SQLITE_GC_INTERVAL_MS` | `21600000` (6h) | How often to delete expired cache entries from SQLite |
+| `SQLITE_VACUUM_INTERVAL_MS` | `604800000` (7d) | How often to run VACUUM to reclaim free disk space |
 
 ---
 
@@ -149,7 +142,7 @@ Browser Client (Config UI)
 /api/prefetch  ← CORS bypass, SSRF-guarded (hostname + DNS check)
         │ Config JSON → base64url or enc: token
         ▼
-server.js  ← decrypt token → createAddon(config) → LRU cache
+server.js  ← decrypt token → createAddon(config) → SQLite cache
         │
         ▼
 src/addon/builder.js  ← M3UEPGAddon class → xtreamProvider → fetch channels + EPG
@@ -176,10 +169,12 @@ Stremio Client  (Catalog / Meta / Stream)
 
 | Layer | Contents |
 |-------|----------|
-| LRU (in-memory) | Channels + EPG data per config (TTL + max-size eviction) |
-| Build promise cache | De-duplicates concurrent addon builds for same config |
+| SQLite (persistent) | Channels + EPG data per config (gzip-compressed BLOBs with TTL) |
+| Build promise cache (in-memory) | De-duplicates concurrent addon builds for same config |
+| Interface cache (in-memory) | Caches built Stremio SDK interfaces per token |
 
-Cache key = MD5 of normalized config (URL, username, EPG options).
+Cache key = MD5 of normalized config (URL, username, EPG options).  
+SQLite uses WAL mode for concurrency, with automatic garbage collection (2h) and daily VACUUM.
 
 ---
 

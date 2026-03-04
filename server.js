@@ -39,4 +39,44 @@ app.use((error, req, res, next) => {
 
 app.listen(env.PORT, () => {
     console.log(`🚀 Server running → http://localhost:${env.PORT} (debug=${env.DEBUG}, prefetch=${env.PREFETCH_ENABLED})`);
+
+    if (env.CACHE_ENABLED) {
+        const sqliteCache = require('./src/utils/sqliteCache');
+        const GC_INTERVAL_MS = env.SQLITE_GC_INTERVAL_MS;
+        const VACUUM_INTERVAL_MS = env.SQLITE_VACUUM_INTERVAL_MS;
+
+        setInterval(() => {
+            try {
+                const deleted = sqliteCache.cleanExpired();
+                if (deleted > 0) console.log(`[CACHE-GC] Cleaned ${deleted} expired entries`);
+            } catch (e) {
+                console.error('[CACHE-GC] Error:', e.message);
+            }
+        }, GC_INTERVAL_MS);
+
+        setInterval(() => {
+            try {
+                sqliteCache.vacuum();
+                console.log('[CACHE-GC] VACUUM completed');
+            } catch (e) {
+                console.error('[CACHE-GC] VACUUM error:', e.message);
+            }
+        }, VACUUM_INTERVAL_MS);
+    }
+});
+
+
+process.on('SIGTERM', () => {
+    try {
+        const sqliteCache = require('./src/utils/sqliteCache');
+        sqliteCache.close();
+    } catch (_) { }
+    process.exit(0);
+});
+process.on('SIGINT', () => {
+    try {
+        const sqliteCache = require('./src/utils/sqliteCache');
+        sqliteCache.close();
+    } catch (_) { }
+    process.exit(0);
 });

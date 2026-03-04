@@ -1,9 +1,6 @@
-node_modules
-npm-debug.log
-
-# Docker config (not needed inside the image)
-Dockerfile
-docker-compose.yml
+# Dependencies
+node_modules/
+npm-debug.log*
 
 # Git
 .git
@@ -11,14 +8,26 @@ docker-compose.yml
 
 # Environment files
 *.env
+test-credentials.env
+
+# Docker config
+Dockerfile
+docker-compose.yml
 
 # Documentation & dev-only files
 README.md
+LICENSE
 AGENT.md
 .agent/
-.dev
+.temp/
+tmp/
+data/
+.dev/
+beamup.json
 
 # Editor / IDE
-.vscode
+.vscode/
+.idea/
 *.swp
+.DS_Store
 *.log

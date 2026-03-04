@@ -22,4 +22,7 @@ module.exports = {
     TOKEN_RATE_LIMIT_ENABLED: (process.env.TOKEN_RATE_LIMIT_ENABLED || 'true').toLowerCase() !== 'false',
     TOKEN_RATE_LIMIT_WINDOW_MS: parseInt(process.env.TOKEN_RATE_LIMIT_WINDOW_MS || '60000', 10),
     TOKEN_RATE_LIMIT_MAX: parseInt(process.env.TOKEN_RATE_LIMIT_MAX || '60', 10),
+    SQLITE_PATH: process.env.SQLITE_PATH || null,
+    SQLITE_GC_INTERVAL_MS: parseInt(process.env.SQLITE_GC_INTERVAL_MS || '21600000', 10),
+    SQLITE_VACUUM_INTERVAL_MS: parseInt(process.env.SQLITE_VACUUM_INTERVAL_MS || '604800000', 10),
 };

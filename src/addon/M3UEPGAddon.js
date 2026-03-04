@@ -1,5 +1,6 @@
 const crypto = require('crypto');
 const LRUCache = require('../utils/lruCache');
+const sqliteCache = require('../utils/sqliteCache');
 const { makeLogger } = require('../utils/logger');
 const { parseEPG, getCurrentProgram, getUpcomingPrograms } = require('../parsers/epgParser');
 const env = require('../config/env');
@@ -8,7 +9,10 @@ const CACHE_ENABLED = env.CACHE_ENABLED;
 const CACHE_TTL_MS = env.CACHE_TTL_MS;
 const MAX_CACHE_ENTRIES = env.MAX_CACHE_ENTRIES;
 
-const dataCache = new LRUCache({ max: MAX_CACHE_ENTRIES, ttl: CACHE_TTL_MS });
+if (CACHE_ENABLED) {
+    sqliteCache.init(env.SQLITE_PATH);
+}
+
 const buildPromiseCache = new LRUCache({ max: MAX_CACHE_ENTRIES, ttl: CACHE_TTL_MS });
 
 function stableStringify(obj) {
@@ -58,7 +62,7 @@ class M3UEPGAddon {
     async loadFromCache() {
         if (!CACHE_ENABLED) return;
         const cacheKey = 'addon:data:' + this.cacheKey;
-        const cached = dataCache.get(cacheKey);
+        const cached = sqliteCache.get(cacheKey);
         if (cached) {
             this.channels = cached.channels || [];
             this.epgData = cached.epgData || {};
@@ -78,7 +82,7 @@ class M3UEPGAddon {
             epgData: this.epgData,
             lastUpdate: this.lastUpdate
         };
-        dataCache.set(cacheKey, entry);
+        sqliteCache.set(cacheKey, entry, CACHE_TTL_MS);
         this.log.debug('Saved data to cache');
     }
 
