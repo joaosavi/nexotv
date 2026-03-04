@@ -5,6 +5,7 @@ npm-debug.log*
 # Git
 .git
 .gitignore
+.github/
 
 # Environment files
 *.env
