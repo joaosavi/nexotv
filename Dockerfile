@@ -2,17 +2,19 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Copy dependency files first (for Docker layer caching)
+RUN apk add --no-cache python3 build-base
+
 COPY package.json package-lock.json ./
 RUN npm ci --production
 
-# Copy source code
+RUN apk del python3 build-base
+
 COPY server.js ./
 COPY src/ ./src/
 COPY public/ ./public/
 
-# Expose default port
+RUN mkdir -p /app/data
+
 EXPOSE 7000
 
-# Start the server
 CMD ["node", "server.js"]

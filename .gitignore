@@ -1,11 +1,27 @@
+# Local environment files
+.env
 *.env
+
+# Dependencies
+node_modules/
+
+# IDEs and Editors
 .vscode/
 .idea/
-.well-known/
-node_modules/
+*.swp
+.DS_Store
+
+# Logs
 *.log
-.agent/tasks/*
-.agent
+npm-debug.log*
+
+# Project specific
+.agent/
 .temp/
-AGENT.md
 tmp/
+data/
+AGENT.md
+beamup.json
+
+# Stremio specific
+.well-known/

@@ -8,4 +8,6 @@ services:
       - "7000:7000"
     env_file:
       - .env
+    volumes:
+      - ./iptv_data:/app/data
     restart: unless-stopped
