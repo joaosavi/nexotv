@@ -1,0 +1,93 @@
+name: Docker Build & Publish
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+    tags:
+      - "v*.*.*"
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    name: Build & Push to Docker Hub
+    runs-on: ubuntu-latest
+
+    steps:
+      # ─── 1. Checkout do código ───────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ─── 2. Metadados da imagem (tags e labels automáticos) ─────────────────
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/iptv-stremio-addon
+          tags: |
+            # Branch main → tag "latest"
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+            # Branch dev → tag "dev"
+            type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
+            # Tags semver (ex: v1.2.3 → 1.2.3, 1.2, 1)
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            # SHA curto do commit (ex: sha-a1b2c3d)
+            type=sha,prefix=sha-,format=short
+
+      # ─── 3. QEMU para builds multi-plataforma (amd64 + arm64) ───────────────
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      # ─── 4. Docker Buildx ────────────────────────────────────────────────────
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # ─── 5. Login no Docker Hub (apenas em push, não em PR) ─────────────────
+      - name: Log in to Docker Hub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # ─── 6. Cache das camadas do Docker para builds mais rápidos ────────────
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      # ─── 7. Build e Push ─────────────────────────────────────────────────────
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          # Só faz push em eventos de push (não em PRs)
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
+      # ─── 8. Rotaciona cache (evita crescimento ilimitado) ────────────────────
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+      # ─── 9. Atualiza descrição do repositório no Docker Hub ──────────────────
+      - name: Update Docker Hub description
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: peter-evans/dockerhub-description@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          repository: ${{ secrets.DOCKERHUB_USERNAME }}/iptv-stremio-addon
+          readme-filepath: ./README.md
