@@ -43,7 +43,7 @@ router.get('/:token/logo/:tvgId.png', async (req, res) => {
                 if (head.ok) {
                     const len = parseInt(head.headers.get('content-length'), 10);
                     if (isNaN(len) || len > 50) {
-                        if (env.LOGO_RESIZE_ENABLED === true) {
+                        if (req.userConfig && req.userConfig.resizeLogo === true) {
                             if (head.body) {
                                 try { await head.body.cancel(); } catch (e) { /* ignore */ }
                             }

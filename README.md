@@ -12,7 +12,7 @@
 - 🔍 Category-based browsing + channel search
 - 🔐 Config tokens: base64-encoded (plain) or AES-256-GCM encrypted (with `CONFIG_SECRET`)
 - ⚡ Persistent SQLite cache with gzip compression, configurable TTL, and automatic garbage collection
-- 🖼️ Configurable Channel logo proxy with multi-source fallback, optional resizing and caching
+- 🖼️ Configurable Channel logo proxy with multi-source fallback, per-user resize opt-in, and optional caching
 - 🛡️ SSRF-protected server-side CORS bypass proxy for pre-flight validation
 - 🛑 Hybrid Rate Limiting to prevent API abuse (Global IP & Token-based)
 
@@ -89,7 +89,6 @@ services:
 | `ADDON_NAME` | `IPTV Stremio Addon` | Addon name shown in Stremio |
 | `ADDON_DESCRIPTION` | `Stream your IPTV channels in Stremio` | Addon description shown in Stremio |
 | `ADDON_LOGO_URL` | *(unset)* | URL for the addon logo in Stremio |
-| `LOGO_RESIZE_ENABLED` | `true` | Wrap logos in wsrv.nl proxy to enforce 2:3 aspect ratio |
 | `LOGO_CACHE_ENABLED` | `true` | Apply Cache-Control headers to logo proxy responses |
 | `IP_RATE_LIMIT_ENABLED` | `true` | Enable global IP-based rate limiting |
 | `IP_RATE_LIMIT_WINDOW_MS` | `300000` (5m) | Window in ms for IP rate limit |
