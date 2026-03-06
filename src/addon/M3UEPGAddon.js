@@ -26,7 +26,8 @@ function createCacheKey(config) {
         enableEpg: !!config.enableEpg,
         xtreamUrl: config.xtreamUrl,
         xtreamUsername: config.xtreamUsername,
-        epgOffsetHours: config.epgOffsetHours
+        epgOffsetHours: config.epgOffsetHours,
+        resizeLogo: !!config.resizeLogo
     };
     return crypto.createHash('md5').update(stableStringify(minimal)).digest('hex');
 }
@@ -153,7 +154,7 @@ class M3UEPGAddon {
             }
         }
 
-        if (env.LOGO_RESIZE_ENABLED && finalUrl.startsWith('http') && !finalUrl.includes('wsrv.nl')) {
+        if (this.config.resizeLogo && finalUrl.startsWith('http') && !finalUrl.includes('wsrv.nl')) {
             return `https://wsrv.nl/?url=${encodeURIComponent(finalUrl)}&w=250&h=375&fit=contain&bg=black`;
         }
         return finalUrl;

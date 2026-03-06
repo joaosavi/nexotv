@@ -61,6 +61,7 @@ router.use('/:token', async (req, res, next) => {
 
     req.addonInterface = iface;
     req.configToken = token;
+    req.userConfig = config;
     next();
 });
 
