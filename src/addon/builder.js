@@ -13,7 +13,7 @@ async function createAddon(config) {
     const cacheKey = createCacheKey(config);
     const debugFlag = !!env.DEBUG;
     if (debugFlag) {
-        console.log('[DEBUG] createAddon start', { cacheKey, provider: 'xtream' });
+        console.log('[DEBUG] createAddon start', { cacheKey, provider: config.provider || 'xtream' });
     } else {
         console.log(`[ADDON] Cache ${CACHE_ENABLED ? 'ENABLED' : 'DISABLED'} for config ${cacheKey}`);
     }
@@ -40,7 +40,8 @@ async function createAddon(config) {
             const start = Date.now();
             try {
                 addonInstance.updateData().catch(() => { });
-                let items = args.type === 'tv' && args.id === 'iptv_channels' ? addonInstance.channels : [];
+                const catalogIds = ['iptv_channels', 'iptv_org'];
+                let items = args.type === 'tv' && catalogIds.includes(args.id) ? addonInstance.channels : [];
                 const extra = args.extra || {};
                 if (extra.genre && extra.genre !== 'All Channels') {
                     items = items.filter(i =>
@@ -98,7 +99,9 @@ async function createAddon(config) {
             }
         });
 
-        return builder.getInterface();
+        const iface = builder.getInterface();
+        iface.addonInstance = addonInstance;
+        return iface;
     })();
 
     if (CACHE_ENABLED) buildPromiseCache.set(cacheKey, buildPromise);

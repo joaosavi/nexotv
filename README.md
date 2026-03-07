@@ -10,7 +10,7 @@
 - 📺 **Dynamic Providers:** Live TV channels via **Xtream Codes JSON API** or the **IPTV-org Public Repository**
 - ⚙️ **Unified Configuration:** Responsive, tabbed setup interface for both providers
 - 📡 **EPG Support (Xtream):** panel XMLTV or custom XMLTV URL, pruned and optimized for low memory and CPU footprint
-- 🔍 **Filtering & Search:** Category-based browsing and search, plus Country filtering (IPTV-org)
+- 🔍 **Filtering & Search:** Category-based browsing and search, plus multi-select Country and Category filtering for IPTV-org (with intra-category OR, inter-category AND logic)
 - 🔐 Config tokens: base64-encoded (plain) or AES-256-GCM encrypted (with `CONFIG_SECRET`)
 - ⚡ Persistent SQLite cache with gzip compression, configurable TTL, and automatic garbage collection
 - 🖼️ Configurable Channel logo proxy with multi-source fallback, per-user resize opt-in, and optional caching

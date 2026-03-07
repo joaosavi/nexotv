@@ -11,8 +11,8 @@ async function fetchJson(url) {
 async function fetchData(addonInstance) {
     const { config } = addonInstance;
 
-    const filterCountry = config.iptvOrgCountry ? config.iptvOrgCountry.toUpperCase() : null;
-    const filterCategory = config.iptvOrgCategory ? config.iptvOrgCategory.toLowerCase() : null;
+    const filterCountries = config.iptvOrgCountry ? config.iptvOrgCountry.split(',').map(c => c.trim().toUpperCase()).filter(c => c) : [];
+    const filterCategories = config.iptvOrgCategory ? config.iptvOrgCategory.split(',').map(c => c.trim().toLowerCase()).filter(c => c) : [];
 
     addonInstance.channels = [];
     addonInstance.epgData = {};
@@ -43,13 +43,14 @@ async function fetchData(addonInstance) {
         const urls = streamMap[ch.id];
         if (!urls || urls.length === 0) continue;
 
-        if (filterCountry && ch.country !== filterCountry) continue;
+        if (filterCountries.length > 0 && !filterCountries.includes(ch.country)) continue;
 
-        if (filterCategory) {
+        if (filterCategories.length > 0) {
             const cats = Array.isArray(ch.categories)
                 ? ch.categories.map(c => c.toLowerCase())
                 : [];
-            if (!cats.includes(filterCategory)) continue;
+            const overlap = cats.some(c => filterCategories.includes(c));
+            if (!overlap) continue;
         }
 
         const category = ch.categories?.[0] || 'Live TV';
