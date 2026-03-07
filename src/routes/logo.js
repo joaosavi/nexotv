@@ -43,11 +43,15 @@ router.get('/:token/logo/:tvgId.png', async (req, res) => {
                 if (head.ok) {
                     const len = parseInt(head.headers.get('content-length'), 10);
                     if (isNaN(len) || len > 50) {
-                        if (req.userConfig && req.userConfig.resizeLogo === true) {
+                        if (req.userConfig && req.userConfig.reformatLogos === true) {
                             if (head.body) {
                                 try { await head.body.cancel(); } catch (e) { /* ignore */ }
                             }
-                            const wsrvUrl = `https://wsrv.nl/?url=${encodeURIComponent(url)}&w=250&h=375&fit=contain&bg=black`;
+                            let finalUrl = url;
+                            if (finalUrl.includes('imgur.com')) {
+                                finalUrl = `https://proxy.duckduckgo.com/iu/?u=${encodeURIComponent(finalUrl)}`;
+                            }
+                            const wsrvUrl = `https://wsrv.nl/?url=${encodeURIComponent(finalUrl)}&w=250&h=375&fit=contain&we&bg=2b2b2b`;
                             return res.redirect(wsrvUrl);
                         } else if (env.LOGO_CACHE_ENABLED === true) {
                             let resResponse = head;

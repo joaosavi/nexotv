@@ -285,8 +285,8 @@
                 trySet('customEpgUrl', decoded.epgUrl);
             }
             trySet('epgOffsetHours', decoded.epgOffsetHours);
-            const resizeLogo = document.getElementById('resizeLogo');
-            if (resizeLogo) resizeLogo.checked = !!decoded.resizeLogo;
+            const reformatLogos = document.getElementById('reformatLogos');
+            if (reformatLogos) reformatLogos.checked = !!decoded.reformatLogos;
         }
     }
 

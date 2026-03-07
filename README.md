@@ -1,15 +1,16 @@
 # IPTV Stremio Addon
 
 > A self-hostable, token-based, privacy-friendly IPTV addon for **Stremio**.  
-> Connect your IPTV service using Xtream Codes credentials.
+> Connect your IPTV service using Xtream Codes credentials, or use the free **IPTV-org public channel list**.
 
 ---
 
 ## ✨ Features
 
-- 📺 Live TV channels via **Xtream Codes JSON API**
-- 📡 EPG support: panel XMLTV or custom XMLTV URL, with timezone offset support, pruned and optimized for low memory and CPU footprint
-- 🔍 Category-based browsing + channel search
+- 📺 **Dynamic Providers:** Live TV channels via **Xtream Codes JSON API** or the **IPTV-org Public Repository**
+- ⚙️ **Unified Configuration:** Responsive, tabbed setup interface for both providers
+- 📡 **EPG Support (Xtream):** panel XMLTV or custom XMLTV URL, pruned and optimized for low memory and CPU footprint
+- 🔍 **Filtering & Search:** Category-based browsing and search, plus Country filtering (IPTV-org)
 - 🔐 Config tokens: base64-encoded (plain) or AES-256-GCM encrypted (with `CONFIG_SECRET`)
 - ⚡ Persistent SQLite cache with gzip compression, configurable TTL, and automatic garbage collection
 - 🖼️ Configurable Channel logo proxy with multi-source fallback, per-user resize opt-in, and optional caching
@@ -27,7 +28,7 @@ cp .env.example .env
 npm install
 npm start
 # Server runs on PORT (default 7000)
-open http://localhost:7000/
+open http://localhost:7000/configure
 ```
 
 ---
@@ -66,10 +67,11 @@ services:
 ## 🎬 How to Install in Stremio
 
 1. Open `http://your-host/configure`
-2. Enter your Xtream panel URL, username, and password
-3. Configure EPG options (optional)
-4. Click **Install / Update (Xtream)**
-5. A manifest URL is generated — click **Open in Stremio** or copy the URL
+2. Choose your preferred tab:
+   - **IPTV-org (Free):** Select Country and Category from the searchable dropdowns.
+   - **Xtream API:** Enter your panel URL, username, password, and EPG options.
+3. Click **Install / Update Addon**
+4. A manifest URL is generated — click **Open in Stremio** or copy the URL
 
 ---
 
@@ -79,7 +81,8 @@ services:
 |----------|---------|-------------|
 | `PORT` | `7000` | HTTP server port |
 | `CACHE_ENABLED` | `true` | Enable/disable persistent SQLite caching |
-| `CACHE_TTL_MS` | `21600000` (6h) | Cache TTL in milliseconds |
+| `CACHE_TTL_MS` | `21600000` (6h) | Cache TTL in milliseconds for Xtream data |
+| `IPTV_ORG_CACHE_TTL_MS` | `21600000` (6h) | Cache TTL in milliseconds for IPTV-org data |
 | `MAX_CACHE_ENTRIES` | `300` | Max in-memory entries (build/interface caches) |
 | `SQLITE_PATH` | `./data/cache.sqlite` | Path to the SQLite cache database file |
 | `CONFIG_SECRET` | *(unset)* | Enables AES-256-GCM encryption for tokens (must be ≥16 chars). Without this, tokens are plain base64. |
@@ -105,14 +108,18 @@ services:
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| GET | `/` | Redirect to Xtream config page |
-| GET | `/configure-xtream` | Xtream configuration form |
+| GET | `/` | Redirect to `/configure` |
+| GET | `/configure` | Unified configuration form |
+| GET | `/configure-xtream` | Redirects to `/configure` (Backwards compat) |
+| GET | `/configure-iptv-org` | Alias for unified configuration form |
 | GET | `/health` | Health check (`{ status: 'OK' }`) |
 | POST | `/encrypt` | Returns encrypted token (requires `CONFIG_SECRET`) |
 | POST | `/api/prefetch` | Server-side CORS bypass fetch |
 | GET | `/api/capabilities` | Returns `{ encryptionEnabled: bool }` |
 | GET | `/api/addon-info` | Returns addon name/description/logo |
-| GET | `/:token/configure-xtream` | Reconfigure (pre-fills from token) |
+| GET | `/:token/configure` | Reconfigure (pre-fills from token) |
+| GET | `/:token/configure-xtream` | Redirects to `/:token/configure` |
+| GET | `/:token/configure-iptv-org` | Alias for unified reconfigure |
 | GET | `/:token/manifest.json` | Stremio manifest |
 | GET | `/:token/catalog/tv/iptv_channels.json` | Channel catalog |
 | GET | `/:token/stream/tv/:id.json` | Stream URL |
@@ -144,7 +151,10 @@ Browser Client (Config UI)
 server.js  ← decrypt token → createAddon(config) → SQLite cache
         │
         ▼
-src/addon/builder.js  ← M3UEPGAddon class → xtreamProvider → fetch channels + EPG
+src/addon/builder.js  ← M3UEPGAddon class (Dynamic Provider) 
+        ├─▶ xtreamProvider   → fetch Xtream channels + EPG
+        └─▶ iptvOrgProvider  → fetch IPTV-org channels
+        │ 
         │ Stremio SDK routes
         ▼
 Stremio Client  (Catalog / Meta / Stream)

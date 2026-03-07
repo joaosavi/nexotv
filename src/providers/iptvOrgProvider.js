@@ -19,9 +19,10 @@ async function fetchData(addonInstance) {
 
     addonInstance.log.debug('[iptvOrg] Fetching channels + streams in parallel…');
 
-    const [channelsRaw, streamsRaw] = await Promise.all([
+    const [channelsRaw, streamsRaw, logosRaw] = await Promise.all([
         fetchJson(`${IPTV_ORG_BASE}/channels.json`),
         fetchJson(`${IPTV_ORG_BASE}/streams.json`),
+        fetchJson(`${IPTV_ORG_BASE}/logos.json`),
     ]);
 
     const streamMap = {};
@@ -29,6 +30,12 @@ async function fetchData(addonInstance) {
         if (!s || !s.channel || !s.url) continue;
         if (!streamMap[s.channel]) streamMap[s.channel] = [];
         streamMap[s.channel].push(s.url);
+    }
+
+    const logoMap = {};
+    for (const l of logosRaw) {
+        if (!l || !l.channel || !l.url) continue;
+        if (!logoMap[l.channel]) logoMap[l.channel] = l.url;
     }
 
     const channels = [];
@@ -46,24 +53,23 @@ async function fetchData(addonInstance) {
         }
 
         const category = ch.categories?.[0] || 'Live TV';
-        const logo = ch.logo || '';
+        const logo = logoMap[ch.id] || ch.logo || '';
 
-        for (let i = 0; i < urls.length; i++) {
-            channels.push({
-                id: `iptvorg_${ch.id}_${i}`,
-                name: i === 0 ? ch.name : `${ch.name} [${i + 1}]`,
-                type: 'tv',
-                url: urls[i],
-                logo,
-                category,
-                epg_channel_id: null,
-                attributes: {
-                    'tvg-logo': logo,
-                    'tvg-id': ch.id,
-                    'group-title': category
-                }
-            });
-        }
+        channels.push({
+            id: `iptv_org_${ch.id}`,
+            name: ch.name,
+            type: 'tv',
+            url: urls[0],
+            urls,
+            logo,
+            category,
+            epg_channel_id: null,
+            attributes: {
+                'tvg-logo': logo,
+                'tvg-id': ch.id,
+                'group-title': category
+            }
+        });
     }
 
     addonInstance.channels = channels;

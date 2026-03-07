@@ -13,7 +13,7 @@
     const epgOffsetInput = document.getElementById('epgOffsetHours');
     const customEpgGroup = document.getElementById('customEpgGroup');
     const customEpgUrlInp = document.getElementById('customEpgUrl');
-    const resizeLogoChk = document.getElementById('resizeLogo');
+    const reformatLogosChk = document.getElementById('reformatLogos');
 
     const epgModeRadios = () => [...document.querySelectorAll('input[name="epgMode"]')];
 
@@ -165,7 +165,7 @@
         const epgMode = enableEpgInitial ? selectedEpgMode() : 'disabled';
         const customEpg = (epgMode === 'custom') ? customEpgUrlInp.value.trim() : '';
         const epgOffset = epgOffsetInput.value ? parseFloat(epgOffsetInput.value) : 0;
-        const resizeLogo = resizeLogoChk ? resizeLogoChk.checked : false;
+        const reformatLogos = reformatLogosChk ? reformatLogosChk.checked : false;
 
         if (!validateUrl(baseUrl)) {
             alert('Invalid Xtream base URL');
@@ -270,7 +270,7 @@
                 xtreamUsername: username,
                 xtreamPassword: password,
                 enableEpg: enableEpgFinal,
-                resizeLogo: resizeLogo
+                reformatLogos: reformatLogos
             };
 
             if (enableEpgFinal && epgMode === 'custom' && customEpgUrlInp.value.trim()) {
