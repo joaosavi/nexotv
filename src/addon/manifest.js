@@ -3,7 +3,7 @@ const env = require('../config/env');
 function createManifest() {
     return {
         id: 'org.stremio.iptv-addon',
-        version: '1.0.0',
+        version: '1.2.0',
         name: env.ADDON_NAME,
         description: env.ADDON_DESCRIPTION,
         resources: ['catalog', 'stream', 'meta'],
