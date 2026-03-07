@@ -220,6 +220,75 @@
     }
 
 
+    function getDecodedToken() {
+        try {
+            const parts = window.location.pathname.split('/').filter(Boolean);
+            if (parts.length < 2) return null;
+            const lastPart = parts[parts.length - 1];
+            if (!lastPart.startsWith('configure')) return null;
+            const token = parts[parts.length - 2];
+            if (!token) return null;
+
+            let decoded = null;
+            try {
+                let b64 = token.replace(/-/g, '+').replace(/_/g, '/');
+                while (b64.length % 4) b64 += '=';
+                const json = decodeURIComponent(escape(atob(b64)));
+                decoded = JSON.parse(json);
+            } catch {
+                // encrypted token — cannot decode client-side
+            }
+            return decoded;
+        } catch {
+            return null;
+        }
+    }
+
+    function prefillIfReconfigure(provider) {
+        const decoded = getDecodedToken();
+        if (!decoded) return;
+        if (decoded.provider !== provider && !(provider === 'xtream' && !decoded.provider)) return;
+
+        const tabId = provider === 'xtream' ? 'panel-xtream' : 'panel-iptv-org';
+        const tabBtns = document.querySelectorAll('.tab-btn[role="tab"]');
+        const tabPanels = document.querySelectorAll('.tab-panel[role="tabpanel"]');
+        tabBtns.forEach(btn => {
+            const isTarget = btn.getAttribute('aria-controls') === tabId;
+            btn.classList.toggle('active', isTarget);
+            btn.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+        });
+        tabPanels.forEach(panel => {
+            const isTarget = panel.id === tabId;
+            panel.classList.toggle('active', isTarget);
+            panel.classList.toggle('hidden', !isTarget);
+        });
+
+        if (provider === 'xtream') {
+            const trySet = (id, val) => {
+                const el = document.getElementById(id);
+                if (el && val !== undefined && val !== null) el.value = val;
+            };
+            trySet('xtreamUrl', decoded.xtreamUrl);
+            trySet('xtreamUsername', decoded.xtreamUsername);
+            if (decoded.xtreamPassword) {
+                const pwd = document.getElementById('xtreamPassword');
+                if (pwd) {
+                    pwd.value = '********';
+                    pwd.dataset.original = decoded.xtreamPassword;
+                }
+            }
+            const enableEpg = document.getElementById('enableEpg');
+            if (enableEpg) enableEpg.checked = !!decoded.enableEpg;
+            if (decoded.epgUrl) {
+                const custom = document.querySelector('input[name="epgMode"][value="custom"]');
+                if (custom) custom.checked = true;
+                trySet('customEpgUrl', decoded.epgUrl);
+            }
+            trySet('epgOffsetHours', decoded.epgOffsetHours);
+            const resizeLogo = document.getElementById('resizeLogo');
+            if (resizeLogo) resizeLogo.checked = !!decoded.resizeLogo;
+        }
+    }
 
     window.ConfigureCommon = {
         showOverlay,
@@ -229,7 +298,8 @@
         overlaySetMessage(msg) { loaderMessage.textContent = msg; },
         setProgress,
         appendDetail,
-        // For direct-config pre-flight to re-disable if needed
-        forceDisableActions: disableActionButtons
+        forceDisableActions: disableActionButtons,
+        prefillIfReconfigure,
+        getDecodedToken,
     };
 })();
