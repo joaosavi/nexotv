@@ -21,7 +21,7 @@ function createManifest() {
                 genres: []
             }
         ],
-        idPrefixes: ['iptv_'],
+        idPrefixes: ['iptv_', 'iptvorg_'],
         behaviorHints: {
             configurable: true,
             configurationRequired: true

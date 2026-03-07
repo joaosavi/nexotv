@@ -19,22 +19,37 @@ function stableStringify(obj) {
     return JSON.stringify(obj, Object.keys(obj).sort());
 }
 
+const PROVIDER_FILE_MAP = {
+    'xtream': 'xtreamProvider',
+    'iptv-org': 'iptvOrgProvider'
+};
+
 function createCacheKey(config) {
-    const minimal = {
-        provider: 'xtream',
-        epgUrl: config.epgUrl,
-        enableEpg: !!config.enableEpg,
-        xtreamUrl: config.xtreamUrl,
-        xtreamUsername: config.xtreamUsername,
-        epgOffsetHours: config.epgOffsetHours,
-        resizeLogo: !!config.resizeLogo
-    };
+    const provider = config.provider || 'xtream';
+    let minimal;
+    if (provider === 'iptv-org') {
+        minimal = {
+            provider,
+            iptvOrgCountry: config.iptvOrgCountry || null,
+            iptvOrgCategory: config.iptvOrgCategory || null,
+        };
+    } else {
+        minimal = {
+            provider: 'xtream',
+            epgUrl: config.epgUrl,
+            enableEpg: !!config.enableEpg,
+            xtreamUrl: config.xtreamUrl,
+            xtreamUsername: config.xtreamUsername,
+            epgOffsetHours: config.epgOffsetHours,
+            reformatLogos: !!config.reformatLogos
+        };
+    }
     return crypto.createHash('md5').update(stableStringify(minimal)).digest('hex');
 }
 
 class M3UEPGAddon {
     constructor(config = {}, manifestRef) {
-        this.providerName = 'xtream';
+        this.providerName = config.provider || 'xtream';
         this.config = config;
         this.manifestRef = manifestRef;
         this.cacheKey = createCacheKey(config);
@@ -42,6 +57,7 @@ class M3UEPGAddon {
         this.channels = [];
         this.epgData = {};
         this.lastUpdate = 0;
+        this.cacheTtl = this.providerName === 'iptv-org' ? env.IPTV_ORG_CACHE_TTL_MS : CACHE_TTL_MS;
         this.log = makeLogger();
 
         if (typeof this.config.epgOffsetHours === 'string') {
@@ -52,6 +68,10 @@ class M3UEPGAddon {
             this.config.epgOffsetHours = 0;
         if (Math.abs(this.config.epgOffsetHours) > 48)
             this.config.epgOffsetHours = 0;
+
+        if (this.providerName === 'iptv-org') {
+            this.config.reformatLogos = true;
+        }
 
         this.log.debug('Addon instance created', {
             provider: this.providerName,
@@ -83,7 +103,7 @@ class M3UEPGAddon {
             epgData: this.epgData,
             lastUpdate: this.lastUpdate
         };
-        sqliteCache.set(cacheKey, entry, CACHE_TTL_MS);
+        sqliteCache.set(cacheKey, entry, this.cacheTtl);
         this.log.debug('Saved data to cache');
     }
 
@@ -126,7 +146,8 @@ class M3UEPGAddon {
         }
         try {
             const start = Date.now();
-            const providerModule = require(`../providers/${this.providerName}Provider.js`);
+            const providerFile = PROVIDER_FILE_MAP[this.providerName] || `${this.providerName}Provider`;
+            const providerModule = require(`../providers/${providerFile}.js`);
             await providerModule.fetchData(this);
             this.lastUpdate = Date.now();
             if (CACHE_ENABLED) await this.saveToCache();
@@ -146,16 +167,18 @@ class M3UEPGAddon {
         if (logoAttr && logoAttr.trim()) {
             finalUrl = logoAttr;
         } else {
-            const tvgId = item.attributes?.['tvg-id'] || item.attributes?.['tvg-name'];
-            if (!tvgId) {
-                finalUrl = `https://via.placeholder.com/250x375/333333/FFFFFF?text=${encodeURIComponent(item.name)}`;
-            } else {
-                finalUrl = `logo/${encodeURIComponent(tvgId)}.png`;
-            }
+            // Text placeholder if no logo exists at all
+            finalUrl = `https://placehold.co/250x375/2b2b2b/FFFFFF.png?text=${encodeURIComponent(item.name || 'TV')}`;
         }
 
-        if (this.config.resizeLogo && finalUrl.startsWith('http') && !finalUrl.includes('wsrv.nl')) {
-            return `https://wsrv.nl/?url=${encodeURIComponent(finalUrl)}&w=250&h=375&fit=contain&bg=black`;
+        // Apply dark gray poster framing for all remote images
+        if (this.config.reformatLogos && finalUrl.startsWith('http') && !finalUrl.includes('wsrv.nl') && !finalUrl.includes('placehold.co')) {
+            // Imgur blocks wsrv.nl; route it through a generic proxy so wsrv.nl can fetch it and apply the gray poster frame
+            if (finalUrl.includes('imgur.com')) {
+                finalUrl = `https://proxy.duckduckgo.com/iu/?u=${encodeURIComponent(finalUrl)}`;
+            }
+            // fit=contain to keep logo proportions, bg=2b2b2b for the dark gray card, default output to webp
+            return `https://wsrv.nl/?url=${encodeURIComponent(finalUrl)}&w=250&h=375&fit=contain&we&bg=2b2b2b`;
         }
         return finalUrl;
     }
@@ -171,6 +194,8 @@ class M3UEPGAddon {
                 ? `📡 Now: ${current.title}${current.description ? `\n${current.description}` : ''}`
                 : '📡 Live Channel',
             poster: this.deriveFallbackLogoUrl(item),
+            background: this.deriveFallbackLogoUrl(item),
+            posterShape: 'poster',
             genres: item.category
                 ? [item.category]
                 : (item.attributes?.['group-title'] ? [item.attributes['group-title']] : ['Live TV']),
@@ -178,14 +203,23 @@ class M3UEPGAddon {
         };
     }
 
-    getStream(id) {
+    getStreams(id) {
         const item = this.channels.find(i => i.id === id);
-        if (!item) return null;
-        return {
+        if (!item) return [];
+
+        if (item.urls && item.urls.length > 0) {
+            return item.urls.map((url, index) => ({
+                url: url,
+                title: item.urls.length > 1 ? `${item.name} - Link ${index + 1}` : `${item.name} - Live`,
+                behaviorHints: { notWebReady: true }
+            }));
+        }
+
+        return [{
             url: item.url,
             title: `${item.name} - Live`,
             behaviorHints: { notWebReady: true }
-        };
+        }];
     }
 
     getDetailedMeta(id) {
@@ -212,6 +246,8 @@ class M3UEPGAddon {
             type: 'tv',
             name: item.name,
             poster: this.deriveFallbackLogoUrl(item),
+            background: this.deriveFallbackLogoUrl(item),
+            posterShape: 'poster',
             description,
             genres: item.category
                 ? [item.category]

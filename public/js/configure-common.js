@@ -1,4 +1,4 @@
-// Shared overlay & manifest polling logic (enhanced + strict disabling of action buttons until manifest ready)
+// Shared overlay and manifest polling logic
 (function () {
     const overlay = document.getElementById('loaderOverlay');
     const progressBar = document.getElementById('progressBar');
@@ -8,7 +8,7 @@
     const copyBtn = document.getElementById('copyManifestBtn');
     const openBtn = document.getElementById('openStremioBtn');
 
-    // Polling / timing constants
+    // Constants
     const POLL_INTERVAL_MS = 1500;
     const MAX_WAIT_MS = 90000;
     const PROGRESS_ESTIMATE_MS = 45000;
@@ -22,7 +22,7 @@
     let baselinePct = 0;
     let ready = false;
 
-    /* -------- Utility UI helpers -------- */
+
 
     function disableActionButtons() {
         if (openBtn) {
@@ -88,7 +88,7 @@
         return 'Almost done…';
     }
 
-    /* -------- Polling logic -------- */
+
 
     function attemptPoll() {
         if (manualPhase) return; // Pre-flight still running client-side
@@ -158,7 +158,7 @@
         attemptPoll();
     }
 
-    /* -------- Clipboard / events -------- */
+
 
     function copyManifest() {
         if (!manifestUrl || copyBtn.disabled) return;
@@ -183,7 +183,7 @@
     if (copyBtn) copyBtn.addEventListener('click', copyManifest);
     if (openBtn) openBtn.addEventListener('click', openInStremio);
 
-    /* -------- Token / URL builder -------- */
+
 
     function encodeConfigBase64Url(config) {
         const json = JSON.stringify(config);
@@ -219,7 +219,76 @@
         return { token, manifestUrl, stremioUrl };
     }
 
-    /* -------- Public API -------- */
+
+    function getDecodedToken() {
+        try {
+            const parts = window.location.pathname.split('/').filter(Boolean);
+            if (parts.length < 2) return null;
+            const lastPart = parts[parts.length - 1];
+            if (!lastPart.startsWith('configure')) return null;
+            const token = parts[parts.length - 2];
+            if (!token) return null;
+
+            let decoded = null;
+            try {
+                let b64 = token.replace(/-/g, '+').replace(/_/g, '/');
+                while (b64.length % 4) b64 += '=';
+                const json = decodeURIComponent(escape(atob(b64)));
+                decoded = JSON.parse(json);
+            } catch {
+                // encrypted token — cannot decode client-side
+            }
+            return decoded;
+        } catch {
+            return null;
+        }
+    }
+
+    function prefillIfReconfigure(provider) {
+        const decoded = getDecodedToken();
+        if (!decoded) return;
+        if (decoded.provider !== provider && !(provider === 'xtream' && !decoded.provider)) return;
+
+        const tabId = provider === 'xtream' ? 'panel-xtream' : 'panel-iptv-org';
+        const tabBtns = document.querySelectorAll('.tab-btn[role="tab"]');
+        const tabPanels = document.querySelectorAll('.tab-panel[role="tabpanel"]');
+        tabBtns.forEach(btn => {
+            const isTarget = btn.getAttribute('aria-controls') === tabId;
+            btn.classList.toggle('active', isTarget);
+            btn.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+        });
+        tabPanels.forEach(panel => {
+            const isTarget = panel.id === tabId;
+            panel.classList.toggle('active', isTarget);
+            panel.classList.toggle('hidden', !isTarget);
+        });
+
+        if (provider === 'xtream') {
+            const trySet = (id, val) => {
+                const el = document.getElementById(id);
+                if (el && val !== undefined && val !== null) el.value = val;
+            };
+            trySet('xtreamUrl', decoded.xtreamUrl);
+            trySet('xtreamUsername', decoded.xtreamUsername);
+            if (decoded.xtreamPassword) {
+                const pwd = document.getElementById('xtreamPassword');
+                if (pwd) {
+                    pwd.value = '********';
+                    pwd.dataset.original = decoded.xtreamPassword;
+                }
+            }
+            const enableEpg = document.getElementById('enableEpg');
+            if (enableEpg) enableEpg.checked = !!decoded.enableEpg;
+            if (decoded.epgUrl) {
+                const custom = document.querySelector('input[name="epgMode"][value="custom"]');
+                if (custom) custom.checked = true;
+                trySet('customEpgUrl', decoded.epgUrl);
+            }
+            trySet('epgOffsetHours', decoded.epgOffsetHours);
+            const reformatLogos = document.getElementById('reformatLogos');
+            if (reformatLogos) reformatLogos.checked = !!decoded.reformatLogos;
+        }
+    }
 
     window.ConfigureCommon = {
         showOverlay,
@@ -229,7 +298,8 @@
         overlaySetMessage(msg) { loaderMessage.textContent = msg; },
         setProgress,
         appendDetail,
-        // For direct-config pre-flight to re-disable if needed
-        forceDisableActions: disableActionButtons
+        forceDisableActions: disableActionButtons,
+        prefillIfReconfigure,
+        getDecodedToken,
     };
 })();

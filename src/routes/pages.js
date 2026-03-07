@@ -4,14 +4,9 @@ const { createManifest } = require('../addon/manifest');
 
 const router = Router();
 
-// The static dir is passed via the app or computed here
 const publicDir = path.join(__dirname, '..', '..', 'public');
 
 router.get('/', (req, res) => {
-    res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));
-});
-
-router.get('/configure-xtream', (req, res) => {
     res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));
 });
 
@@ -19,12 +14,23 @@ router.get('/configure', (req, res) => {
     res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));
 });
 
-// Legacy redirect
+router.get('/configure-iptv-org', (req, res) => {
+    res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));
+});
+
+router.get('/configure-xtream', (req, res) => {
+    res.redirect(301, '/configure');
+});
+
 router.get('/:token/configure', (req, res) => {
-    return res.redirect(`/${encodeURIComponent(req.params.token)}/configure-xtream`);
+    res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));
 });
 
 router.get('/:token/configure-xtream', (req, res) => {
+    res.redirect(301, `/${encodeURIComponent(req.params.token)}/configure`);
+});
+
+router.get('/:token/configure-iptv-org', (req, res) => {
     res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));
 });
 

@@ -11,7 +11,6 @@ const log = makeLogger();
 const PREFETCH_MAX_BYTES = env.PREFETCH_MAX_BYTES;
 const PREFETCH_ENABLED = env.PREFETCH_ENABLED;
 
-// Encryption endpoint
 router.post('/encrypt', (req, res) => {
     if (!env.CONFIG_SECRET) {
         return res.status(400).json({ error: 'Encryption not enabled on server (CONFIG_SECRET missing)' });
@@ -26,7 +25,6 @@ router.post('/encrypt', (req, res) => {
     }
 });
 
-// Addon info endpoint – used by the frontend to populate dynamic title/subtitle
 router.get('/api/addon-info', (req, res) => {
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
     res.setHeader('Pragma', 'no-cache');
@@ -38,15 +36,13 @@ router.get('/api/addon-info', (req, res) => {
     });
 });
 
-// Capabilities endpoint – used by the frontend to warn about missing encryption
 router.get('/api/capabilities', (req, res) => {
     res.json({ encryptionEnabled: !!env.CONFIG_SECRET });
 });
 
 /**
- * Prefetch endpoint: server-side fetch to bypass browser CORS for playlist / EPG pre-flight.
- * SECURITY: Basic SSRF protections included (blocks local/private networks).
- * NOTE: For production, consider a stricter allowlist or DNS/IP resolution checks.
+ * Server-side fetch to bypass browser CORS for playlist/EPG configuration pre-flight.
+ * Includes basic SSRF protection by blocking local/private network ranges.
  */
 router.post('/api/prefetch', async (req, res) => {
     if (!PREFETCH_ENABLED) return res.status(403).json({ error: 'Prefetch disabled by server' });
@@ -73,7 +69,6 @@ router.post('/api/prefetch', async (req, res) => {
 
         log.debug('Prefetch start', { url, purpose });
 
-        // TASK-03: DNS resolution to block DNS rebinding attacks
         try {
             const resolved = await dns.lookup(u.hostname);
             if (isPrivateIp(resolved.address)) {

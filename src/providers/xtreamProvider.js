@@ -1,5 +1,4 @@
 const { parseEPG } = require('../parsers/epgParser');
-// xtreamProvider.js – Live TV only (no VOD, no series)
 
 async function withTimeout(url, options, ms) {
     const controller = new AbortController();
