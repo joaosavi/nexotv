@@ -35,18 +35,56 @@
         const input = document.getElementById(inputId);
         const hidden = document.getElementById(hiddenId);
         const list = document.getElementById(listId);
+        const container = input ? input.closest('.searchable-select') : null;
+        const tagsContainer = container ? container.querySelector('.selected-tags') : null;
 
-        if (!input || !hidden || !list) return;
+        if (!input || !hidden || !list || !tagsContainer) return;
 
+        let selectedItems = [];
         input.placeholder = placeholder || 'Search…';
+
+        function updateHidden() {
+            hidden.value = selectedItems.map(i => i.value).join(',');
+            input.placeholder = selectedItems.length > 0 ? '' : (placeholder || 'Search…');
+        }
+
+        function renderTags() {
+            tagsContainer.innerHTML = '';
+            selectedItems.forEach(it => {
+                const span = document.createElement('span');
+                span.className = 'tag';
+                // Remove bracketed info for smaller pills if length is long
+                let shortLabel = it.label.split(' (')[0].trim();
+                span.textContent = shortLabel;
+
+                const removeBtn = document.createElement('span');
+                removeBtn.className = 'remove-tag';
+                removeBtn.textContent = '×';
+                removeBtn.setAttribute('data-value', it.value);
+
+                removeBtn.addEventListener('mousedown', (e) => {
+                    e.preventDefault(); // prevent losing focus on input right before click triggers
+                    e.stopPropagation();
+                    selectedItems = selectedItems.filter(s => s.value !== it.value);
+                    renderTags();
+                    updateHidden();
+                    renderItems(input.value);
+                });
+
+                span.appendChild(removeBtn);
+                tagsContainer.appendChild(span);
+            });
+        }
 
         function renderItems(filter) {
             const q = (filter || '').toLowerCase().trim();
             list.innerHTML = '';
 
+            const availableItems = items.filter(it => it.value !== '' && !selectedItems.some(s => s.value === it.value));
+
             const filtered = q
-                ? items.filter(it => it.label.toLowerCase().includes(q))
-                : items;
+                ? availableItems.filter(it => it.label.toLowerCase().includes(q))
+                : availableItems;
 
             if (filtered.length === 0) {
                 const li = document.createElement('li');
@@ -71,9 +109,15 @@
         }
 
         function selectItem(it) {
-            input.value = it.value ? it.label : '';
-            hidden.value = it.value ?? '';
+            if (it.value === '') return;
+            if (!selectedItems.some(s => s.value === it.value)) {
+                selectedItems.push(it);
+            }
+            input.value = '';
+            renderTags();
+            updateHidden();
             closeDropdown();
+            input.focus();
         }
 
         function openDropdown() {
@@ -89,7 +133,6 @@
 
         input.addEventListener('focus', () => openDropdown());
         input.addEventListener('input', () => {
-            hidden.value = '';
             renderItems(input.value);
             list.classList.remove('hidden');
         });
@@ -122,16 +165,30 @@
                 }
             } else if (e.key === 'Escape') {
                 closeDropdown();
+            } else if (e.key === 'Backspace' && input.value === '' && selectedItems.length > 0) {
+                // remove last pill if pressing backspace on empty input
+                selectedItems.pop();
+                renderTags();
+                updateHidden();
+                renderItems(input.value);
             }
         });
 
+        function setSelection(itemsArr) {
+            selectedItems = itemsArr.filter(i => i && i.value);
+            renderTags();
+            updateHidden();
+        }
+
         renderItems('');
 
-        return { selectItem, renderItems };
+        return { selectItem, renderItems, setSelection };
     }
 
     let countriesLoaded = [];
     let categoriesLoaded = [];
+    let countrySelectObj;
+    let categorySelectObj;
 
     async function loadIptvOrgData() {
         try {
@@ -140,34 +197,34 @@
                 fetch(`${IPTV_ORG_BASE}/categories.json`).then(r => r.json()),
             ]);
 
-            const countryItems = [{ label: 'All Countries', value: '' }];
+            const countryItems = [];
             const sorted = [...countriesRaw].sort((a, b) => a.name.localeCompare(b.name));
             sorted.forEach(c => {
                 countryItems.push({ label: `${c.name} (${c.code.toUpperCase()})`, value: c.code.toUpperCase() });
             });
             countriesLoaded = countryItems;
 
-            const categoryItems = [{ label: 'All Categories', value: '' }];
+            const categoryItems = [];
             const sortedCats = [...categoriesRaw].sort((a, b) => a.name.localeCompare(b.name));
             sortedCats.forEach(c => {
                 categoryItems.push({ label: capitalize(c.name), value: c.id });
             });
             categoriesLoaded = categoryItems;
 
-            buildSearchableSelect({
+            countrySelectObj = buildSearchableSelect({
                 inputId: 'iptvOrgCountryInput',
                 hiddenId: 'iptvOrgCountry',
                 listId: 'iptvOrgCountryList',
                 items: countriesLoaded,
-                placeholder: 'All Countries (search to filter…)',
+                placeholder: 'Search to add country…',
             });
 
-            buildSearchableSelect({
+            categorySelectObj = buildSearchableSelect({
                 inputId: 'iptvOrgCategoryInput',
                 hiddenId: 'iptvOrgCategory',
                 listId: 'iptvOrgCategoryList',
                 items: categoriesLoaded,
-                placeholder: 'All Categories (search to filter…)',
+                placeholder: 'Search to add category…',
             });
 
             tryPrefillIptvOrg();
@@ -186,20 +243,16 @@
 
         activateTab('panel-iptv-org');
 
-        if (decoded.iptvOrgCountry) {
-            const match = countriesLoaded.find(c => c.value === decoded.iptvOrgCountry.toUpperCase());
-            if (match) {
-                document.getElementById('iptvOrgCountryInput').value = match.label;
-                document.getElementById('iptvOrgCountry').value = match.value;
-            }
+        if (decoded.iptvOrgCountry && countrySelectObj) {
+            const reqCodes = decoded.iptvOrgCountry.split(',').map(c => c.trim().toUpperCase());
+            const matches = reqCodes.map(req => countriesLoaded.find(c => c.value === req)).filter(Boolean);
+            countrySelectObj.setSelection(matches);
         }
 
-        if (decoded.iptvOrgCategory) {
-            const match = categoriesLoaded.find(c => c.value === decoded.iptvOrgCategory.toLowerCase());
-            if (match) {
-                document.getElementById('iptvOrgCategoryInput').value = match.label;
-                document.getElementById('iptvOrgCategory').value = match.value;
-            }
+        if (decoded.iptvOrgCategory && categorySelectObj) {
+            const reqCats = decoded.iptvOrgCategory.split(',').map(c => c.trim().toLowerCase());
+            const matches = reqCats.map(req => categoriesLoaded.find(c => c.value === req)).filter(Boolean);
+            categorySelectObj.setSelection(matches);
         }
     }
 

@@ -61,6 +61,11 @@ router.use('/:token', async (req, res, next) => {
     req.addonInterface = iface;
     req.configToken = token;
     req.userConfig = config;
+
+    if (iface.addonInstance) {
+        iface.addonInstance.buildGenresInManifest();
+    }
+
     next();
 });
 
@@ -69,6 +74,11 @@ router.use(require('./logo'));
 router.get('/:token/manifest.json', tokenLimiter, (req, res) => {
     const iface = req.addonInterface;
     if (!iface) return res.status(500).json({ error: 'Interface not ready' });
+
+    // Ensure manifest genres are fresh before serving
+    if (iface.addonInstance) {
+        iface.addonInstance.buildGenresInManifest();
+    }
     const manifest = JSON.parse(JSON.stringify(iface.manifest));
     if (manifest.behaviorHints) {
         delete manifest.behaviorHints.configurationRequired;
