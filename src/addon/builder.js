@@ -1,4 +1,3 @@
-// IPTV Stremio Addon Core – Xtream Codes, Live TV only
 const env = require('../config/env');
 const { addonBuilder } = require("stremio-addon-sdk");
 const crypto = require("crypto");

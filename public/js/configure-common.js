@@ -1,4 +1,4 @@
-// Shared overlay & manifest polling logic (enhanced + strict disabling of action buttons until manifest ready)
+// Shared overlay and manifest polling logic
 (function () {
     const overlay = document.getElementById('loaderOverlay');
     const progressBar = document.getElementById('progressBar');
@@ -8,7 +8,7 @@
     const copyBtn = document.getElementById('copyManifestBtn');
     const openBtn = document.getElementById('openStremioBtn');
 
-    // Polling / timing constants
+    // Constants
     const POLL_INTERVAL_MS = 1500;
     const MAX_WAIT_MS = 90000;
     const PROGRESS_ESTIMATE_MS = 45000;
@@ -22,7 +22,7 @@
     let baselinePct = 0;
     let ready = false;
 
-    /* -------- Utility UI helpers -------- */
+
 
     function disableActionButtons() {
         if (openBtn) {
@@ -88,7 +88,7 @@
         return 'Almost done…';
     }
 
-    /* -------- Polling logic -------- */
+
 
     function attemptPoll() {
         if (manualPhase) return; // Pre-flight still running client-side
@@ -158,7 +158,7 @@
         attemptPoll();
     }
 
-    /* -------- Clipboard / events -------- */
+
 
     function copyManifest() {
         if (!manifestUrl || copyBtn.disabled) return;
@@ -183,7 +183,7 @@
     if (copyBtn) copyBtn.addEventListener('click', copyManifest);
     if (openBtn) openBtn.addEventListener('click', openInStremio);
 
-    /* -------- Token / URL builder -------- */
+
 
     function encodeConfigBase64Url(config) {
         const json = JSON.stringify(config);
@@ -219,7 +219,7 @@
         return { token, manifestUrl, stremioUrl };
     }
 
-    /* -------- Public API -------- */
+
 
     window.ConfigureCommon = {
         showOverlay,

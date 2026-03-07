@@ -1,5 +1,3 @@
-// Central environment configuration — reads all process.env variables once.
-// All other modules should require this file instead of reading process.env directly.
 require('dotenv').config();
 
 module.exports = {

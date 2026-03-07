@@ -1,7 +1,3 @@
-// xtream-config.js
-// Updated: If EPG fetch (browser + server) fails, continue WITHOUT EPG instead of aborting.
-// Supports custom EPG or panel XMLTV; failing both attempts disables EPG gracefully.
-
 (function () {
     const form = document.getElementById('xtreamForm');
     if (!form) {

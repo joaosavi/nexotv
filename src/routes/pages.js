@@ -4,7 +4,6 @@ const { createManifest } = require('../addon/manifest');
 
 const router = Router();
 
-// The static dir is passed via the app or computed here
 const publicDir = path.join(__dirname, '..', '..', 'public');
 
 router.get('/', (req, res) => {
@@ -19,7 +18,6 @@ router.get('/configure', (req, res) => {
     res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));
 });
 
-// Legacy redirect
 router.get('/:token/configure', (req, res) => {
     return res.redirect(`/${encodeURIComponent(req.params.token)}/configure-xtream`);
 });

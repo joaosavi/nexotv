@@ -1,4 +1,3 @@
-// Minimal LRU + TTL cache used when Redis is not configured
 class LRUCache {
     constructor({ max = 100, ttl = 6 * 3600 * 1000 } = {}) {
         this.max = max;
