@@ -19,22 +19,37 @@ function stableStringify(obj) {
     return JSON.stringify(obj, Object.keys(obj).sort());
 }
 
+const PROVIDER_FILE_MAP = {
+    'xtream': 'xtreamProvider',
+    'iptv-org': 'iptvOrgProvider'
+};
+
 function createCacheKey(config) {
-    const minimal = {
-        provider: 'xtream',
-        epgUrl: config.epgUrl,
-        enableEpg: !!config.enableEpg,
-        xtreamUrl: config.xtreamUrl,
-        xtreamUsername: config.xtreamUsername,
-        epgOffsetHours: config.epgOffsetHours,
-        resizeLogo: !!config.resizeLogo
-    };
+    const provider = config.provider || 'xtream';
+    let minimal;
+    if (provider === 'iptv-org') {
+        minimal = {
+            provider,
+            iptvOrgCountry: config.iptvOrgCountry || null,
+            iptvOrgCategory: config.iptvOrgCategory || null,
+        };
+    } else {
+        minimal = {
+            provider: 'xtream',
+            epgUrl: config.epgUrl,
+            enableEpg: !!config.enableEpg,
+            xtreamUrl: config.xtreamUrl,
+            xtreamUsername: config.xtreamUsername,
+            epgOffsetHours: config.epgOffsetHours,
+            resizeLogo: !!config.resizeLogo
+        };
+    }
     return crypto.createHash('md5').update(stableStringify(minimal)).digest('hex');
 }
 
 class M3UEPGAddon {
     constructor(config = {}, manifestRef) {
-        this.providerName = 'xtream';
+        this.providerName = config.provider || 'xtream';
         this.config = config;
         this.manifestRef = manifestRef;
         this.cacheKey = createCacheKey(config);
@@ -42,6 +57,7 @@ class M3UEPGAddon {
         this.channels = [];
         this.epgData = {};
         this.lastUpdate = 0;
+        this.cacheTtl = this.providerName === 'iptv-org' ? env.IPTV_ORG_CACHE_TTL_MS : CACHE_TTL_MS;
         this.log = makeLogger();
 
         if (typeof this.config.epgOffsetHours === 'string') {
@@ -83,7 +99,7 @@ class M3UEPGAddon {
             epgData: this.epgData,
             lastUpdate: this.lastUpdate
         };
-        sqliteCache.set(cacheKey, entry, CACHE_TTL_MS);
+        sqliteCache.set(cacheKey, entry, this.cacheTtl);
         this.log.debug('Saved data to cache');
     }
 
@@ -126,7 +142,8 @@ class M3UEPGAddon {
         }
         try {
             const start = Date.now();
-            const providerModule = require(`../providers/${this.providerName}Provider.js`);
+            const providerFile = PROVIDER_FILE_MAP[this.providerName] || `${this.providerName}Provider`;
+            const providerModule = require(`../providers/${providerFile}.js`);
             await providerModule.fetchData(this);
             this.lastUpdate = Date.now();
             if (CACHE_ENABLED) await this.saveToCache();

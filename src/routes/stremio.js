@@ -38,7 +38,7 @@ router.use('/:token', async (req, res, next) => {
         log.debug('Config parse failed', token, e.message);
         return res.status(400).json({ error: 'Invalid configuration token' });
     }
-    config.provider = 'xtream';
+    config.provider = config.provider || 'xtream';
 
     const ifaceKey = 'iface:' + crypto.createHash('md5').update(token).digest('hex');
 
