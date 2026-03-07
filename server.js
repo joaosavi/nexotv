@@ -1,4 +1,3 @@
-// Server for IPTV Stremio Addon
 const express = require('express');
 const path = require('path');
 const env = require('./src/config/env');

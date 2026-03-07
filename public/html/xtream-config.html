@@ -3,8 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Xtream Configuration</title>
+    <title>Configure — IPTV Stremio Addon</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description"
+        content="Configure your IPTV Stremio Addon. Choose between free IPTV-org channels or your own Xtream API provider.">
     <meta name="color-scheme" content="dark light">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
@@ -24,86 +26,147 @@
         <main class="main-content">
             <section class="config-section">
                 <div class="card configurator-card">
-                    <h2>Xtream Configuration</h2>
-                    <form id="xtreamForm" class="config-form" autocomplete="off">
-                        <fieldset>
-                            <legend>Credentials</legend>
-                            <div class="form-group">
-                                <label for="xtreamUrl">Xtream Base URL <span class="req">*</span></label>
-                                <input type="url" id="xtreamUrl" name="xtreamUrl" required
-                                    placeholder="http://panel.example.com:8080">
-                                <small class="hint">Do not include a trailing slash.</small>
-                            </div>
-                            <div class="form-group">
-                                <label for="xtreamUsername">Username <span class="req">*</span></label>
-                                <input type="text" id="xtreamUsername" name="xtreamUsername" required>
-                            </div>
-                            <div class="form-group password-group">
-                                <label for="xtreamPassword">Password <span class="req">*</span></label>
-                                <div class="pwd-wrapper">
-                                    <input type="password" id="xtreamPassword" name="xtreamPassword" required>
-                                    <button type="button" id="togglePwd" class="btn tiny ghost">Show</button>
+                    <h2>Choose your provider</h2>
+
+                    <!-- Provider Tabs -->
+                    <div class="provider-tabs" role="tablist">
+                        <button class="tab-btn active" id="tab-iptv-org" role="tab" aria-selected="true"
+                            aria-controls="panel-iptv-org">
+                            🌐 IPTV-org <span class="tab-badge">Free</span>
+                        </button>
+                        <button class="tab-btn" id="tab-xtream" role="tab" aria-selected="false"
+                            aria-controls="panel-xtream">
+                            🔑 Xtream API
+                        </button>
+                    </div>
+
+                    <!-- IPTV-org Tab Panel -->
+                    <div id="panel-iptv-org" class="tab-panel active" role="tabpanel" aria-labelledby="tab-iptv-org">
+                        <form id="iptvOrgForm" class="config-form" autocomplete="off">
+                            <fieldset>
+                                <legend>Channel Filter</legend>
+
+                                <div class="form-group">
+                                    <label for="iptvOrgCountryInput">Country</label>
+                                    <div class="searchable-select" id="iptvOrgCountrySelect">
+                                        <input type="text" id="iptvOrgCountryInput" class="searchable-select-input"
+                                            placeholder="All Countries (search to filter…)" autocomplete="off"
+                                            role="combobox" aria-expanded="false" aria-autocomplete="list"
+                                            aria-controls="iptvOrgCountryList">
+                                        <input type="hidden" id="iptvOrgCountry" name="iptvOrgCountry" value="">
+                                        <ul id="iptvOrgCountryList" class="searchable-select-dropdown hidden"
+                                            role="listbox" aria-label="Countries"></ul>
+                                    </div>
+                                    <small class="hint">Leave blank to include all countries.</small>
                                 </div>
-                            </div>
-                        </fieldset>
 
-                        <fieldset>
-                            <legend>EPG Options</legend>
-                            <div class="form-group checkbox-line">
-                                <input type="checkbox" id="enableEpg" name="enableEpg" checked>
-                                <label class="checkbox-label" for="enableEpg">Enable EPG</label>
-                            </div>
-
-                            <div id="epgModeBlock" class="form-group">
-                                <label class="group-label">EPG Source Mode</label>
-                                <div class="radio-group">
-                                    <label class="checkbox-line">
-                                        <input type="radio" name="epgMode" value="xtream" checked>
-                                        <span class="checkbox-label">Panel XMLTV</span>
-                                    </label>
-                                    <label class="checkbox-line">
-                                        <input type="radio" name="epgMode" value="custom">
-                                        <span class="checkbox-label">Custom EPG URL</span>
-                                    </label>
+                                <div class="form-group">
+                                    <label for="iptvOrgCategoryInput">Category</label>
+                                    <div class="searchable-select" id="iptvOrgCategorySelect">
+                                        <input type="text" id="iptvOrgCategoryInput" class="searchable-select-input"
+                                            placeholder="All Categories (search to filter…)" autocomplete="off"
+                                            role="combobox" aria-expanded="false" aria-autocomplete="list"
+                                            aria-controls="iptvOrgCategoryList">
+                                        <input type="hidden" id="iptvOrgCategory" name="iptvOrgCategory" value="">
+                                        <ul id="iptvOrgCategoryList" class="searchable-select-dropdown hidden"
+                                            role="listbox" aria-label="Categories"></ul>
+                                    </div>
+                                    <small class="hint">Leave blank to include all categories.</small>
                                 </div>
+                            </fieldset>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn primary wide" id="iptv-org-submit">
+                                    Install / Update Addon
+                                </button>
                             </div>
+                        </form>
+                    </div>
 
-                            <div class="form-group hidden" id="customEpgGroup">
-                                <label for="customEpgUrl">Custom EPG XML URL</label>
-                                <input type="url" id="customEpgUrl" name="customEpgUrl"
-                                    placeholder="https://example.com/epg.xml">
-                                <small class="hint">Used instead of panel xmltv.php when selected.</small>
+                    <!-- Xtream API Tab Panel -->
+                    <div id="panel-xtream" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-xtream">
+                        <form id="xtreamForm" class="config-form" autocomplete="off">
+                            <fieldset>
+                                <legend>Credentials</legend>
+                                <div class="form-group">
+                                    <label for="xtreamUrl">Xtream Base URL <span class="req">*</span></label>
+                                    <input type="url" id="xtreamUrl" name="xtreamUrl" required
+                                        placeholder="http://panel.example.com:8080">
+                                    <small class="hint">Do not include a trailing slash.</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="xtreamUsername">Username <span class="req">*</span></label>
+                                    <input type="text" id="xtreamUsername" name="xtreamUsername" required>
+                                </div>
+                                <div class="form-group password-group">
+                                    <label for="xtreamPassword">Password <span class="req">*</span></label>
+                                    <div class="pwd-wrapper">
+                                        <input type="password" id="xtreamPassword" name="xtreamPassword" required>
+                                        <button type="button" id="togglePwd" class="btn tiny ghost">Show</button>
+                                    </div>
+                                </div>
+                            </fieldset>
+
+                            <fieldset>
+                                <legend>EPG Options</legend>
+                                <div class="form-group checkbox-line">
+                                    <input type="checkbox" id="enableEpg" name="enableEpg" checked>
+                                    <label class="checkbox-label" for="enableEpg">Enable EPG</label>
+                                </div>
+
+                                <div id="epgModeBlock" class="form-group">
+                                    <label class="group-label">EPG Source Mode</label>
+                                    <div class="radio-group">
+                                        <label class="checkbox-line">
+                                            <input type="radio" name="epgMode" value="xtream" checked>
+                                            <span class="checkbox-label">Panel XMLTV</span>
+                                        </label>
+                                        <label class="checkbox-line">
+                                            <input type="radio" name="epgMode" value="custom">
+                                            <span class="checkbox-label">Custom EPG URL</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group hidden" id="customEpgGroup">
+                                    <label for="customEpgUrl">Custom EPG XML URL</label>
+                                    <input type="url" id="customEpgUrl" name="customEpgUrl"
+                                        placeholder="https://example.com/epg.xml">
+                                    <small class="hint">Used instead of panel xmltv.php when selected.</small>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="epgOffsetHours">EPG Offset (hours)</label>
+                                    <input type="number" step="0.25" id="epgOffsetHours" name="epgOffsetHours"
+                                        placeholder="0">
+                                </div>
+
+                                <div class="form-group checkbox-line" style="margin-top: 15px;">
+                                    <input type="checkbox" id="reformatLogos" name="reformatLogos">
+                                    <label class="checkbox-label" for="reformatLogos">Reformat Logos (Premium
+                                        Backgrounds) <i>(may slow down loading)</i></label>
+                                </div>
+                            </fieldset>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn primary wide" id="xtream-submit">Install / Update
+                                    Addon</button>
                             </div>
-
-                            <div class="form-group">
-                                <label for="epgOffsetHours">EPG Offset (hours)</label>
-                                <input type="number" step="0.25" id="epgOffsetHours" name="epgOffsetHours"
-                                    placeholder="0">
-                            </div>
-
-                            <div class="form-group checkbox-line" style="margin-top: 15px;">
-                                <input type="checkbox" id="resizeLogo" name="resizeLogo">
-                                <label class="checkbox-label" for="resizeLogo">Resize logos (may slow down loading)</label>
-                            </div>
-                        </fieldset>
-
-
-                        <div class="form-actions">
-                            <button type="submit" class="btn primary wide" id="xtream-submit">Install / Update
-                                Addon</button>
-                        </div>
-                    </form>
+                        </form>
+                    </div>
                 </div>
             </section>
 
             <section class="about-section">
                 <div class="card about-card">
                     <h2>About this Addon</h2>
-                    <p>This addon connects your IPTV service (via Xtream Codes API) to Stremio. It fetches live TV
-                        channels and optionally loads EPG data.</p>
+                    <p>This addon connects your IPTV service to Stremio. Choose from free public channels via
+                        IPTV-org or use your own Xtream Codes API subscription.</p>
                     <ul class="feature-list">
-                        <li><strong>Live TV only</strong> – fetches channels from your panel (no movies or series).</li>
-                        <li><strong>Optional EPG</strong>: use panel XMLTV or a custom XMLTV URL.</li>
+                        <li><strong>IPTV-org (Free)</strong> – thousands of free public channels, no credentials needed.
+                        </li>
+                        <li><strong>Xtream API</strong> – connects your subscription panel (no movies or series).</li>
+                        <li><strong>Optional EPG</strong>: use panel XMLTV or a custom XMLTV URL (Xtream only).</li>
                         <li><strong>EPG offset</strong> adjusts programme times for timezone correction.</li>
                     </ul>
                     <div class="credits">
@@ -136,6 +199,7 @@
 
     <script src="/js/configure-common.js"></script>
     <script src="/js/xtream-config.js"></script>
+    <script src="/js/iptv-org-config.js"></script>
     <script>
         (function () {
             fetch('/api/addon-info?_t=' + Date.now())
@@ -146,7 +210,7 @@
                     const logo = document.getElementById('addonLogo');
                     if (title && info.name) {
                         title.textContent = info.name;
-                        document.title = 'Xtream Configuration • ' + info.name;
+                        document.title = 'Configure • ' + info.name;
                     }
                     if (subtitle && info.description) subtitle.textContent = info.description;
                     if (logo && info.logoUrl) {

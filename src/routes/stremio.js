@@ -26,7 +26,6 @@ function isConfigToken(token) {
     return true;
 }
 
-// Token middleware
 router.use('/:token', async (req, res, next) => {
     const { token } = req.params;
     if (!isConfigToken(token)) return next('route');
@@ -39,7 +38,7 @@ router.use('/:token', async (req, res, next) => {
         log.debug('Config parse failed', token, e.message);
         return res.status(400).json({ error: 'Invalid configuration token' });
     }
-    config.provider = 'xtream';
+    config.provider = config.provider || 'xtream';
 
     const ifaceKey = 'iface:' + crypto.createHash('md5').update(token).digest('hex');
 
@@ -67,7 +66,6 @@ router.use('/:token', async (req, res, next) => {
 
 router.use(require('./logo'));
 
-// Custom manifest route — bypasses the SDK's ~8KB frozen manifest limit
 router.get('/:token/manifest.json', tokenLimiter, (req, res) => {
     const iface = req.addonInterface;
     if (!iface) return res.status(500).json({ error: 'Interface not ready' });
@@ -84,7 +82,6 @@ router.get('/:token/manifest.json', tokenLimiter, (req, res) => {
     res.end(JSON.stringify(manifest));
 });
 
-// Stremio router
 router.use('/:token', tokenLimiter, (req, res, next) => {
 
     const iface = req.addonInterface;

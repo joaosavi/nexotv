@@ -1,4 +1,3 @@
-// IPTV Stremio Addon Core – Xtream Codes, Live TV only
 const env = require('../config/env');
 const { addonBuilder } = require("stremio-addon-sdk");
 const crypto = require("crypto");
@@ -74,12 +73,12 @@ async function createAddon(config) {
 
         builder.defineStreamHandler(async ({ type, id }) => {
             try {
-                const stream = addonInstance.getStream(id);
-                if (!stream) return { streams: [] };
+                const streams = addonInstance.getStreams(id);
+                if (!streams || streams.length === 0) return { streams: [] };
                 if (env.DEBUG) {
-                    console.log('[DEBUG] Stream request', { id, url: stream.url });
+                    console.log('[DEBUG] Stream request', { id, count: streams.length });
                 }
-                return { streams: [stream] };
+                return { streams };
             } catch (e) {
                 console.error('[STREAM] Error', e);
                 return { streams: [] };
