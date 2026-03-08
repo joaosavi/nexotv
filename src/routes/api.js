@@ -56,13 +56,15 @@ router.post('/api/prefetch', async (req, res) => {
         const host = u.hostname;
         // Basic SSRF / local network block
         if (
-            host === 'localhost' ||
-            host === '0.0.0.0' ||
-            /^127\./.test(host) ||
-            /^10\./.test(host) ||
-            /^192\.168\./.test(host) ||
-            /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) ||
-            /^169\.254\./.test(host)
+            !env.ALLOW_LOCAL_URLS && (
+                host === 'localhost' ||
+                host === '0.0.0.0' ||
+                /^127\./.test(host) ||
+                /^10\./.test(host) ||
+                /^192\.168\./.test(host) ||
+                /^172\.(1[6-9]|2[0-9]|3[0-1])\./.test(host) ||
+                /^169\.254\./.test(host)
+            )
         ) {
             return res.status(400).json({ error: 'Blocked host' });
         }
