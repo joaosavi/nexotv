@@ -57,6 +57,8 @@ class M3UEPGAddon {
         this.channels = [];
         this.epgData = {};
         this.lastUpdate = 0;
+        this.firstCatalogRefreshDone = false;
+        this.firstCatalogRefreshPromise = null;
         this.cacheTtl = this.providerName === 'iptv-org' ? env.IPTV_ORG_CACHE_TTL_MS : CACHE_TTL_MS;
         this.log = makeLogger();
 
@@ -158,6 +160,33 @@ class M3UEPGAddon {
             });
         } catch (e) {
             this.log.error('[UPDATE] Failed:', e.message);
+            throw e;
+        }
+    }
+
+    async refreshOnFirstCatalogRequest() {
+        if (this.firstCatalogRefreshDone) return;
+        if (this.firstCatalogRefreshPromise) {
+            await this.firstCatalogRefreshPromise;
+            return;
+        }
+
+        this.firstCatalogRefreshPromise = (async () => {
+            if (CACHE_ENABLED) {
+                sqliteCache.del('addon:data:' + this.cacheKey);
+            }
+            await this.updateData(true);
+            this.firstCatalogRefreshDone = true;
+            this.log.debug('Bootstrap catalog refresh completed', {
+                cacheKey: this.cacheKey,
+                channels: this.channels.length
+            });
+        })();
+
+        try {
+            await this.firstCatalogRefreshPromise;
+        } finally {
+            this.firstCatalogRefreshPromise = null;
         }
     }
 
