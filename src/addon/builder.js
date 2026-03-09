@@ -39,6 +39,7 @@ async function createAddon(config) {
         builder.defineCatalogHandler(async (args) => {
             const start = Date.now();
             try {
+                await addonInstance.refreshOnFirstCatalogRequest();
                 addonInstance.updateData().catch(() => { });
                 const catalogIds = ['iptv_channels', 'iptv_org'];
                 let items = args.type === 'tv' && catalogIds.includes(args.id) ? addonInstance.channels : [];

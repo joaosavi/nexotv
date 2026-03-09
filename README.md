@@ -101,6 +101,7 @@ services:
 | `TOKEN_RATE_LIMIT_MAX` | `60` | Max requests per window for token rate limit |
 | `SQLITE_GC_INTERVAL_MS` | `21600000` (6h) | How often to delete expired cache entries from SQLite |
 | `SQLITE_VACUUM_INTERVAL_MS` | `604800000` (7d) | How often to run VACUUM to reclaim free disk space |
+| `ALLOW_LOCAL_URLS` | `false` | Allow localhost/private IPs for testing endpoints |
 
 ---
 

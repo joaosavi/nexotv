@@ -9,5 +9,5 @@ services:
     env_file:
       - .env
     volumes:
-      - ./iptv_data:/app/data
+      - ./data:/app/data
     restart: unless-stopped
