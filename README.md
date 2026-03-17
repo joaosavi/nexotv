@@ -1,15 +1,15 @@
 # IPTV Stremio Addon
 
-> A self-hostable, token-based, privacy-friendly IPTV addon for **Stremio**.  
-> Connect your IPTV service using Xtream Codes credentials, or use the free **IPTV-org public channel list**.
+> A self-hostable, token-based, privacy-friendly IPTV addon for **Stremio**.
+> Connect your IPTV service using Xtream Codes credentials, load any **M3U/M3U+ playlist**, or use the free **IPTV-org public channel list**.
 
 ---
 
 ## ✨ Features
 
-- 📺 **Dynamic Providers:** Live TV channels via **Xtream Codes JSON API** or the **IPTV-org Public Repository**
-- ⚙️ **Unified Configuration:** Responsive, tabbed setup interface for both providers
-- 📡 **EPG Support (Xtream):** panel XMLTV or custom XMLTV URL, pruned and optimized for low memory and CPU footprint
+- 📺 **Three Providers:** Live TV channels via **Xtream Codes JSON API**, any **M3U/M3U+ playlist URL**, or the **IPTV-org Public Repository**
+- ⚙️ **Unified Configuration:** Responsive, tabbed setup interface for all three providers
+- 📡 **EPG Support:** XMLTV from Xtream panel, embedded M3U playlist header (`url-tvg`/`x-tvg-url`), or a custom XMLTV URL — pruned and optimized for low memory and CPU footprint
 - 🔍 **Filtering & Search:** Category-based browsing and search, plus multi-select Country and Category filtering for IPTV-org (with intra-category OR, inter-category AND logic)
 - 🔐 Config tokens: base64-encoded (plain) or AES-256-GCM encrypted (with `CONFIG_SECRET`)
 - ⚡ Persistent SQLite cache with gzip compression, configurable TTL, and automatic garbage collection
@@ -41,7 +41,7 @@ docker run -d \
   -e PORT=7000 \
   -e DEBUG_MODE=false \
   -e CACHE_ENABLED=true \
-  -v ./iptv_data:/app/data \
+  -v ./data:/app/data \
   -p 7000:7000 \
   --name iptv-addon \
   iptv-stremio-addon
@@ -57,7 +57,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./iptv_data:/app/data
+      - ./data:/app/data
     ports:
       - "7000:7000"
 ```
@@ -68,8 +68,9 @@ services:
 
 1. Open `http://your-host/configure`
 2. Choose your preferred tab:
-   - **IPTV-org (Free):** Select Country and Category from the searchable dropdowns.
    - **Xtream API:** Enter your panel URL, username, password, and EPG options.
+   - **IPTV-org (Free):** Select Country and Category from the searchable dropdowns.
+   - **M3U/M3U+:** Paste your playlist URL. EPG URL is auto-detected from the playlist header or can be set manually.
 3. Click **Install / Update Addon**
 4. A manifest URL is generated — click **Open in Stremio** or copy the URL
 
@@ -83,6 +84,7 @@ services:
 | `CACHE_ENABLED` | `true` | Enable/disable persistent SQLite caching |
 | `CACHE_TTL_MS` | `21600000` (6h) | Cache TTL in milliseconds for Xtream data |
 | `IPTV_ORG_CACHE_TTL_MS` | `21600000` (6h) | Cache TTL in milliseconds for IPTV-org data |
+| `M3U_CACHE_TTL_MS` | `21600000` (6h) | Cache TTL in milliseconds for M3U/M3U+ data |
 | `MAX_CACHE_ENTRIES` | `300` | Max in-memory entries (build/interface caches) |
 | `SQLITE_PATH` | `./data/cache.sqlite` | Path to the SQLite cache database file |
 | `CONFIG_SECRET` | *(unset)* | Enables AES-256-GCM encryption for tokens (must be ≥16 chars). Without this, tokens are plain base64. |
@@ -144,7 +146,7 @@ services:
 
 ```
 Browser Client (Config UI)
-        │ Pre-flight: validate Xtream credentials + EPG
+        │ Pre-flight: validate credentials / playlist URL + EPG
         ▼
 /api/prefetch  ← CORS bypass, SSRF-guarded (hostname + DNS check)
         │ Config JSON → base64url or enc: token
@@ -152,10 +154,11 @@ Browser Client (Config UI)
 server.js  ← decrypt token → createAddon(config) → SQLite cache
         │
         ▼
-src/addon/builder.js  ← M3UEPGAddon class (Dynamic Provider) 
+src/addon/builder.js  ← M3UEPGAddon class (Dynamic Provider)
         ├─▶ xtreamProvider   → fetch Xtream channels + EPG
-        └─▶ iptvOrgProvider  → fetch IPTV-org channels
-        │ 
+        ├─▶ iptvOrgProvider  → fetch IPTV-org channels
+        └─▶ m3uProvider      → fetch + parse M3U/M3U+ playlist + EPG
+        │
         │ Stremio SDK routes
         ▼
 Stremio Client  (Catalog / Meta / Stream)
