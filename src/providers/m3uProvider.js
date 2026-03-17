@@ -62,6 +62,8 @@ async function fetchData(addonInstance) {
             logo:     ch.logo || '',
             category: ch.group,
             epg_channel_id: ch.tvgId || ch.tvgName || '',
+            userAgent: ch.userAgent || '',
+            referrer:  ch.referrer || '',
             attributes: {
                 'tvg-id':      ch.tvgId,
                 'tvg-name':    ch.tvgName,
