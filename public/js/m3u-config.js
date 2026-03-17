@@ -9,16 +9,6 @@
             note: '~200 canais',
             url: 'https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/CanaisBR01.m3u8',
         },
-        {
-            label: 'Nova Lista',
-            note: '~300 canais',
-            url: 'https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/novalista.m3u8',
-        },
-        {
-            label: 'Jumper',
-            note: 'lista pequena',
-            url: 'https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/Jumper.m3u8',
-        },
     ];
 
     const chipsContainer = document.getElementById('publicPlaylistChips');
