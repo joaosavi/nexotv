@@ -53,6 +53,7 @@ class M3UEPGAddon {
         this.config = config;
         this.manifestRef = manifestRef;
         this.cacheKey = createCacheKey(config);
+        this.idPrefix = this.cacheKey.slice(0, 8);
         this.updateInterval = 3600000;
         this.channels = [];
         this.channelMap = new Map();
