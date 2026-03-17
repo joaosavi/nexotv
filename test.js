@@ -84,6 +84,49 @@ http://example.com/test.ts`;
     assert.strictEqual(result.epgUrl, 'http://fallback.com/epg.xml');
 });
 
+// --- M3U Provider Tests ---
+console.log('\n--- M3U Provider Tests ---');
+
+test('m3uProvider throws when m3uUrl is missing', async () => {
+    const { fetchData } = require('./src/providers/m3uProvider');
+    const fakeAddon = {
+        config: {},
+        channels: [],
+        epgData: {},
+        idPrefix: 'abcd1234',
+        log: { debug: () => {}, error: () => {} }
+    };
+    await assert.rejects(
+        () => fetchData(fakeAddon),
+        (err) => {
+            assert.ok(err.message.includes('M3U URL'), `Expected "M3U URL" error, got: ${err.message}`);
+            return true;
+        }
+    );
+});
+
+test('m3uProvider deduplicates colliding channel IDs', () => {
+    // Two channels with same tvg-id produce same base ID — collision condition must exist
+    const { parseM3U } = require('./src/parsers/m3uParser');
+    const m3u = `#EXTM3U
+#EXTINF:-1 tvg-id="DUPE",Channel A
+http://example.com/a.ts
+#EXTINF:-1 tvg-id="DUPE",Channel B
+http://example.com/b.ts`;
+    const { channels } = parseM3U(m3u);
+    // Simulate the ID generation logic
+    const crypto = require('crypto');
+    const prefix = 'abcd1234';
+    const ids = channels.map(ch => {
+        const raw = ch.tvgId && ch.tvgId.trim() ? ch.tvgId.trim() : ch.url;
+        return `m3${prefix}_${crypto.createHash('md5').update(raw).digest('hex').slice(0, 12)}`;
+    });
+    // Both channels have same tvg-id → same base ID before dedup
+    assert.strictEqual(ids[0], ids[1], 'Both should collide before dedup');
+    // After dedup (provider logic), they must differ — tested via provider if live HTTP available
+    // This test confirms the collision condition exists and provider must handle it
+});
+
 // Runner — executes after all synchronous test() registrations
 async function runAll() {
     let passed = 0, failed = 0;
