@@ -36,6 +36,13 @@ async function createAddon(config) {
         }
         addonInstance.buildGenresInManifest();
 
+        let iface;
+        const _origBuildGenres = addonInstance.buildGenresInManifest.bind(addonInstance);
+        addonInstance.buildGenresInManifest = () => {
+            _origBuildGenres();
+            if (iface) iface._cleanManifest = null;
+        };
+
         builder.defineCatalogHandler(async (args) => {
             const start = Date.now();
             try {
@@ -100,7 +107,7 @@ async function createAddon(config) {
             }
         });
 
-        const iface = builder.getInterface();
+        iface = builder.getInterface();
         iface.addonInstance = addonInstance;
         return iface;
     })();
