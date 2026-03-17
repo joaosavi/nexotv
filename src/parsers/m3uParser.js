@@ -1,15 +1,23 @@
 'use strict';
 
 /**
+ * Escape special regex metacharacters in a string.
+ */
+function escapeRegExp(str) {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+/**
  * Extract a named attribute value from an #EXTINF or #EXTM3U line.
  * Handles both quoted and unquoted values:
  *   tvg-id="CNN"  or  tvg-id=CNN
  */
 function extractAttr(line, attr) {
-    const quotedRe = new RegExp(`${attr}="([^"]*)"`, 'i');
+    const escaped = escapeRegExp(attr);
+    const quotedRe = new RegExp(`${escaped}="([^"]*)"`, 'i');
     const quotedMatch = line.match(quotedRe);
     if (quotedMatch) return quotedMatch[1];
-    const unquotedRe = new RegExp(`${attr}=([^\\s,]*)`, 'i');
+    const unquotedRe = new RegExp(`${escaped}=([^\\s,]*)`, 'i');
     const unquotedMatch = line.match(unquotedRe);
     if (unquotedMatch) return unquotedMatch[1];
     return '';
