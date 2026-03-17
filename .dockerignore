@@ -19,6 +19,8 @@ docker-compose.yml
 README.md
 LICENSE
 AGENT.md
+CLAUDE.md
+.claude/
 .agent/
 .temp/
 tmp/

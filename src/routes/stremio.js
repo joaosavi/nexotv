@@ -14,6 +14,7 @@ const router = Router();
 const INTERFACE_TTL_MS = env.CACHE_TTL_MS;
 const interfaceCache = new LRUCache({ max: parseInt(env.MAX_CACHE_ENTRIES || 100), ttl: INTERFACE_TTL_MS });
 const CACHE_ENABLED = env.CACHE_ENABLED;
+const tokenHashCache = new Map();
 
 function maybeDecryptConfig(token) {
     return tryParseConfigToken(token);
@@ -40,7 +41,11 @@ router.use('/:token', async (req, res, next) => {
     }
     config.provider = config.provider || 'xtream';
 
-    const ifaceKey = 'iface:' + crypto.createHash('md5').update(token).digest('hex');
+    let ifaceKey = tokenHashCache.get(token);
+    if (!ifaceKey) {
+        ifaceKey = 'iface:' + crypto.createHash('md5').update(token).digest('hex');
+        if (tokenHashCache.size < env.MAX_CACHE_ENTRIES) tokenHashCache.set(token, ifaceKey);
+    }
 
     let iface = CACHE_ENABLED ? interfaceCache.get(ifaceKey) : null;
     if (!iface) {
@@ -62,10 +67,6 @@ router.use('/:token', async (req, res, next) => {
     req.configToken = token;
     req.userConfig = config;
 
-    if (iface.addonInstance) {
-        iface.addonInstance.buildGenresInManifest();
-    }
-
     next();
 });
 
@@ -75,15 +76,15 @@ router.get('/:token/manifest.json', tokenLimiter, (req, res) => {
     const iface = req.addonInterface;
     if (!iface) return res.status(500).json({ error: 'Interface not ready' });
 
-    // Ensure manifest genres are fresh before serving
-    if (iface.addonInstance) {
-        iface.addonInstance.buildGenresInManifest();
+    if (!iface._cleanManifest) {
+        const m = JSON.parse(JSON.stringify(iface.manifest));
+        if (m.behaviorHints) {
+            delete m.behaviorHints.configurationRequired;
+            delete m.behaviorHints.configurable;
+        }
+        iface._cleanManifest = m;
     }
-    const manifest = JSON.parse(JSON.stringify(iface.manifest));
-    if (manifest.behaviorHints) {
-        delete manifest.behaviorHints.configurationRequired;
-        delete manifest.behaviorHints.configurable;
-    }
+    const manifest = iface._cleanManifest;
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

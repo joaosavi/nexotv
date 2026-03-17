@@ -55,6 +55,7 @@ class M3UEPGAddon {
         this.cacheKey = createCacheKey(config);
         this.updateInterval = 3600000;
         this.channels = [];
+        this.channelMap = new Map();
         this.epgData = {};
         this.lastUpdate = 0;
         this.firstCatalogRefreshDone = false;
@@ -88,6 +89,7 @@ class M3UEPGAddon {
         const cached = sqliteCache.get(cacheKey);
         if (cached) {
             this.channels = cached.channels || [];
+            this.channelMap = new Map(this.channels.map(c => [c.id, c]));
             this.epgData = cached.epgData || {};
             this.lastUpdate = cached.lastUpdate || 0;
             this.log.debug('Cache hit for data', {
@@ -151,6 +153,7 @@ class M3UEPGAddon {
             const providerFile = PROVIDER_FILE_MAP[this.providerName] || `${this.providerName}Provider`;
             const providerModule = require(`../providers/${providerFile}.js`);
             await providerModule.fetchData(this);
+            this.channelMap = new Map(this.channels.map(c => [c.id, c]));
             this.lastUpdate = Date.now();
             if (CACHE_ENABLED) await this.saveToCache();
             this.buildGenresInManifest();
@@ -213,17 +216,14 @@ class M3UEPGAddon {
     }
 
     generateMetaPreview(item) {
-        const epgId = item.attributes?.['tvg-id'] || item.attributes?.['tvg-name'];
-        const current = getCurrentProgram(this.epgData, epgId, this.config.epgOffsetHours);
+        const logoUrl = this.deriveFallbackLogoUrl(item);
         return {
             id: item.id,
             type: 'tv',
             name: item.name,
-            description: current
-                ? `📡 Now: ${current.title}${current.description ? `\n${current.description}` : ''}`
-                : '📡 Live Channel',
-            poster: this.deriveFallbackLogoUrl(item),
-            background: this.deriveFallbackLogoUrl(item),
+            description: '📡 Live Channel',
+            poster: logoUrl,
+            background: logoUrl,
             posterShape: 'poster',
             genres: item.category
                 ? [item.category]
@@ -233,7 +233,7 @@ class M3UEPGAddon {
     }
 
     getStreams(id) {
-        const item = this.channels.find(i => i.id === id);
+        const item = this.channelMap.get(id);
         if (!item) return [];
 
         if (item.urls && item.urls.length > 0) {
@@ -252,7 +252,7 @@ class M3UEPGAddon {
     }
 
     getDetailedMeta(id) {
-        const item = this.channels.find(i => i.id === id);
+        const item = this.channelMap.get(id);
         if (!item) return null;
         const epgId = item.attributes?.['tvg-id'] || item.attributes?.['tvg-name'];
         const current = getCurrentProgram(this.epgData, epgId, this.config.epgOffsetHours);
@@ -270,12 +270,13 @@ class M3UEPGAddon {
                 description += `${p.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${p.title}\n`;
             }
         }
+        const logoUrl = this.deriveFallbackLogoUrl(item);
         return {
             id: item.id,
             type: 'tv',
             name: item.name,
-            poster: this.deriveFallbackLogoUrl(item),
-            background: this.deriveFallbackLogoUrl(item),
+            poster: logoUrl,
+            background: logoUrl,
             posterShape: 'poster',
             description,
             genres: item.category
