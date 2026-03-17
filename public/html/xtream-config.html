@@ -3,11 +3,11 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Configure — IPTV Stremio Addon</title>
+    <title>Configure — IPTV Addon</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="description"
         content="Configure your IPTV Stremio Addon. Choose between free IPTV-org channels or your own Xtream API provider.">
-    <meta name="color-scheme" content="dark light">
+    <meta name="color-scheme" content="dark">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
 
@@ -15,10 +15,21 @@
     <div class="app-container">
         <header class="app-header">
             <div class="header-inner">
-                <img src="" id="addonLogo" class="addon-logo hidden" alt="Addon Logo">
-                <div class="header-text">
-                    <h1 class="app-title" id="addonTitle">IPTV Stremio Addon</h1>
-                    <p class="subtitle" id="addonSubtitle">Stream your IPTV channels in Stremio</p>
+                <!-- Skeleton shown until /api/addon-info resolves -->
+                <div id="headerSkeleton" class="header-skeleton">
+                    <div class="skeleton-icon"></div>
+                    <div class="skeleton-lines">
+                        <div class="skeleton-line w-48"></div>
+                        <div class="skeleton-line w-32"></div>
+                    </div>
+                </div>
+                <!-- Actual content, hidden until loaded -->
+                <div id="headerContent" class="header-content hidden">
+                    <img src="" id="addonLogo" class="addon-logo hidden-img" alt="Addon Logo">
+                    <div class="header-text">
+                        <h1 class="app-title" id="addonTitle"></h1>
+                        <p class="subtitle" id="addonSubtitle"></p>
+                    </div>
                 </div>
             </div>
         </header>
@@ -26,39 +37,42 @@
         <main class="main-content">
             <section class="config-section">
                 <div class="card configurator-card">
-                    <h2>Choose your provider</h2>
+                    <h2>Provider</h2>
 
                     <!-- Provider Tabs -->
                     <div class="provider-tabs" role="tablist">
                         <button class="tab-btn active" id="tab-iptv-org" role="tab" aria-selected="true"
                             aria-controls="panel-iptv-org">
-                            🌐 IPTV-org <span class="tab-badge">Free</span>
+                            IPTV-org <span class="tab-badge">Free</span>
                         </button>
                         <button class="tab-btn" id="tab-xtream" role="tab" aria-selected="false"
                             aria-controls="panel-xtream">
-                            🔑 Xtream API
+                            Xtream API
                         </button>
-                        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-m3u" id="tab-m3u">
-                            📋 M3U / M3U+
+                        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-m3u"
+                            id="tab-m3u">
+                            M3U / M3U+
                         </button>
                     </div>
 
                     <!-- IPTV-org Tab Panel -->
-                    <div id="panel-iptv-org" class="tab-panel active" role="tabpanel" aria-labelledby="tab-iptv-org">
+                    <div id="panel-iptv-org" class="tab-panel active" role="tabpanel"
+                        aria-labelledby="tab-iptv-org">
                         <form id="iptvOrgForm" class="config-form" autocomplete="off">
                             <fieldset>
                                 <legend>Channel Filter</legend>
 
                                 <div class="info-banner">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
                                         <circle cx="12" cy="12" r="10"></circle>
                                         <path d="M12 16v-4M12 8h.01"></path>
                                     </svg>
                                     <span>
-                                        Uses the free <strong>iptv-org</strong> community database (~50k channels from
-                                        200+ countries).
-                                        No credentials needed. Use the filters below to narrow down the list.
+                                        Uses the free <strong>iptv-org</strong> community database (~50k channels
+                                        from 200+ countries). No credentials needed. Use the filters below to
+                                        narrow down the list.
                                     </span>
                                 </div>
 
@@ -66,7 +80,8 @@
                                     <label for="iptvOrgCountryInput">Country</label>
                                     <div class="searchable-select" id="iptvOrgCountrySelect">
                                         <div class="selected-tags"></div>
-                                        <input type="text" id="iptvOrgCountryInput" class="searchable-select-input"
+                                        <input type="text" id="iptvOrgCountryInput"
+                                            class="searchable-select-input"
                                             placeholder="All Countries (search to filter…)" autocomplete="off"
                                             role="combobox" aria-expanded="false" aria-autocomplete="list"
                                             aria-controls="iptvOrgCountryList">
@@ -81,11 +96,13 @@
                                     <label for="iptvOrgCategoryInput">Category</label>
                                     <div class="searchable-select" id="iptvOrgCategorySelect">
                                         <div class="selected-tags"></div>
-                                        <input type="text" id="iptvOrgCategoryInput" class="searchable-select-input"
+                                        <input type="text" id="iptvOrgCategoryInput"
+                                            class="searchable-select-input"
                                             placeholder="All Categories (search to filter…)" autocomplete="off"
                                             role="combobox" aria-expanded="false" aria-autocomplete="list"
                                             aria-controls="iptvOrgCategoryList">
-                                        <input type="hidden" id="iptvOrgCategory" name="iptvOrgCategory" value="">
+                                        <input type="hidden" id="iptvOrgCategory" name="iptvOrgCategory"
+                                            value="">
                                         <ul id="iptvOrgCategoryList" class="searchable-select-dropdown hidden"
                                             role="listbox" aria-label="Categories"></ul>
                                     </div>
@@ -94,28 +111,34 @@
                             </fieldset>
 
                             <div class="form-actions">
-                                <button type="submit" class="btn primary wide" id="iptv-org-submit">
-                                    Install / Update Addon
+                                <button type="submit" class="btn primary" id="iptv-org-submit">
+                                    Install Addon
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                                    </svg>
                                 </button>
                             </div>
                         </form>
                     </div>
 
-                    <!-- M3U / M3U+ tab panel -->
+                    <!-- M3U / M3U+ Tab Panel -->
                     <div class="tab-panel hidden" role="tabpanel" id="panel-m3u" aria-labelledby="tab-m3u">
                         <form id="m3uForm" class="config-form" autocomplete="off">
                             <fieldset>
                                 <legend>Playlist</legend>
 
                                 <div class="info-banner">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
                                         <circle cx="12" cy="12" r="10"></circle>
                                         <path d="M12 16v-4M12 8h.01"></path>
                                     </svg>
                                     <span>
-                                        Paste any <strong>M3U or M3U+</strong> playlist URL. Works with Xtream Codes
-                                        <code>type=m3u_plus</code> links and standard M3U playlists.
+                                        Paste any <strong>M3U or M3U+</strong> playlist URL. Works with Xtream
+                                        Codes <code>type=m3u_plus</code> links and standard M3U playlists.
                                         Each channel's stream URL is extracted individually.
                                     </span>
                                 </div>
@@ -130,7 +153,7 @@
                                 <div class="form-group">
                                     <label class="group-label">
                                         Public Playlists
-                                        <span class="hint"> — third-party links, not affiliated with or endorsed by this addon. Use at your own discretion.</span>
+                                        <span class="hint"> — third-party links, not affiliated with or endorsed by this addon.</span>
                                     </label>
                                     <div class="playlist-chips" id="publicPlaylistChips">
                                         <!-- populated by m3u-config.js -->
@@ -143,7 +166,8 @@
 
                                 <div class="form-group checkbox-line">
                                     <input type="checkbox" id="m3uEnableEpg" name="m3uEnableEpg" />
-                                    <label class="checkbox-label" for="m3uEnableEpg">Enable EPG (program guide)</label>
+                                    <label class="checkbox-label" for="m3uEnableEpg">Enable EPG (program
+                                        guide)</label>
                                 </div>
 
                                 <div id="m3uEpgOptions" class="hidden">
@@ -152,7 +176,8 @@
                                         <div class="radio-group">
                                             <label class="checkbox-line">
                                                 <input type="radio" name="m3uEpgMode" value="auto" checked />
-                                                <span class="checkbox-label">Auto-detect from playlist header (<code>url-tvg</code>)</span>
+                                                <span class="checkbox-label">Auto-detect from playlist header
+                                                    (<code>url-tvg</code>)</span>
                                             </label>
                                             <label class="checkbox-line">
                                                 <input type="radio" name="m3uEpgMode" value="custom" />
@@ -165,36 +190,45 @@
                                         <label for="m3uCustomEpgUrl">Custom EPG XML URL</label>
                                         <input type="url" id="m3uCustomEpgUrl"
                                             placeholder="https://provider.com/epg.xml" />
-                                        <small class="hint">Used instead of the playlist's url-tvg header when selected.</small>
+                                        <small class="hint">Used instead of the playlist's url-tvg header when
+                                            selected.</small>
                                     </div>
 
                                     <div class="form-group">
                                         <label for="m3uEpgOffsetHours">EPG Offset (hours)</label>
-                                        <input type="number" step="0.25" id="m3uEpgOffsetHours" name="m3uEpgOffsetHours"
-                                            value="0" min="-48" max="48" />
+                                        <input type="number" step="0.25" id="m3uEpgOffsetHours"
+                                            name="m3uEpgOffsetHours" value="0" min="-48" max="48" />
                                     </div>
                                 </div>
 
                                 <div class="form-group checkbox-line">
                                     <input type="checkbox" id="m3uReformatLogos" name="m3uReformatLogos" />
-                                    <label class="checkbox-label" for="m3uReformatLogos">Reformat Logos (Premium
-                                        Backgrounds) <i>(may slow down loading)</i></label>
+                                    <label class="checkbox-label" for="m3uReformatLogos">Reformat Logos
+                                        <span class="hint">(may slow down loading)</span></label>
                                 </div>
                             </fieldset>
 
                             <div class="form-actions">
-                                <button class="btn primary wide" id="installM3uBtn" type="button">Install / Update Addon</button>
+                                <button class="btn primary" id="installM3uBtn" type="button">
+                                    Install Addon
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                                    </svg>
+                                </button>
                             </div>
                         </form>
                     </div>
 
                     <!-- Xtream API Tab Panel -->
-                    <div id="panel-xtream" class="tab-panel hidden" role="tabpanel" aria-labelledby="tab-xtream">
+                    <div id="panel-xtream" class="tab-panel hidden" role="tabpanel"
+                        aria-labelledby="tab-xtream">
                         <form id="xtreamForm" class="config-form" autocomplete="off">
                             <fieldset>
                                 <legend>Credentials</legend>
                                 <div class="form-group">
-                                    <label for="xtreamUrl">Xtream Base URL <span class="req">*</span></label>
+                                    <label for="xtreamUrl">Base URL <span class="req">*</span></label>
                                     <input type="url" id="xtreamUrl" name="xtreamUrl" required
                                         placeholder="http://panel.example.com:8080">
                                     <small class="hint">Do not include a trailing slash.</small>
@@ -206,7 +240,8 @@
                                 <div class="form-group password-group">
                                     <label for="xtreamPassword">Password <span class="req">*</span></label>
                                     <div class="pwd-wrapper">
-                                        <input type="password" id="xtreamPassword" name="xtreamPassword" required>
+                                        <input type="password" id="xtreamPassword" name="xtreamPassword"
+                                            required>
                                         <button type="button" id="togglePwd" class="btn tiny ghost">Show</button>
                                     </div>
                                 </div>
@@ -246,16 +281,22 @@
                                         placeholder="0">
                                 </div>
 
-                                <div class="form-group checkbox-line" style="margin-top: 15px;">
+                                <div class="form-group checkbox-line">
                                     <input type="checkbox" id="reformatLogos" name="reformatLogos">
-                                    <label class="checkbox-label" for="reformatLogos">Reformat Logos (Premium
-                                        Backgrounds) <i>(may slow down loading)</i></label>
+                                    <label class="checkbox-label" for="reformatLogos">Reformat Logos
+                                        <span class="hint">(may slow down loading)</span></label>
                                 </div>
                             </fieldset>
 
                             <div class="form-actions">
-                                <button type="submit" class="btn primary wide" id="xtream-submit">Install / Update
-                                    Addon</button>
+                                <button type="submit" class="btn primary" id="xtream-submit">
+                                    Install Addon
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                                    </svg>
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -264,28 +305,30 @@
 
             <section class="about-section">
                 <div class="card about-card">
-                    <h2>About this Addon</h2>
-                    <p>This addon connects your IPTV service to Stremio. Choose from free public channels via
-                        IPTV-org, your own Xtream Codes API subscription, or any M3U/M3U+ playlist URL.</p>
+                    <h2>About</h2>
+                    <p>Connect your IPTV service to Stremio. Choose from free public channels, your Xtream Codes
+                        subscription, or any M3U playlist URL.</p>
                     <ul class="feature-list">
-                        <li><strong>IPTV-org (Free)</strong> – thousands of free public channels, no credentials needed.
+                        <li><strong>IPTV-org</strong> – thousands of free public channels, no credentials needed.
                         </li>
-                        <li><strong>Xtream API</strong> – connects your subscription panel (no movies or series).</li>
-                        <li><strong>M3U / M3U+</strong> – paste any playlist URL; EPG auto-detected from the header.</li>
-                        <li><strong>Optional EPG</strong>: panel XMLTV, custom XMLTV URL, or auto-detected from playlist.</li>
-                        <li><strong>EPG offset</strong> adjusts programme times for timezone correction.</li>
+                        <li><strong>Xtream API</strong> – connects your subscription panel (live TV only).</li>
+                        <li><strong>M3U / M3U+</strong> – paste any playlist URL; EPG auto-detected from header.
+                        </li>
+                        <li><strong>EPG</strong> – panel XMLTV, custom XMLTV URL, or auto-detected.</li>
+                        <li><strong>EPG offset</strong> – adjusts programme times for timezone correction.</li>
                     </ul>
                     <div class="credits">
-                        <p>Developed by <a href="https://github.com/joaosavi" target="_blank"
-                                rel="noopener">joaosavi</a>.</p>
-                        <p>Special thanks to <a href="https://github.com/Inside4ndroid" target="_blank"
-                                rel="noopener">Inside4ndroid</a>.</p>
+                        <p>By <a href="https://github.com/joaosavi" target="_blank" rel="noopener">joaosavi</a>
+                        </p>
+                        <p>Thanks to <a href="https://github.com/Inside4ndroid" target="_blank"
+                                rel="noopener">Inside4ndroid</a></p>
                     </div>
                 </div>
             </section>
         </main>
     </div>
 
+    <!-- Installation Overlay -->
     <div id="loaderOverlay" class="overlay hidden">
         <div class="overlay-box">
             <header class="overlay-header">
@@ -298,7 +341,7 @@
             <pre id="statusDetails" class="status-log" aria-live="polite"></pre>
             <div class="overlay-actions">
                 <button id="openStremioBtn" class="btn success" disabled>Open in Stremio</button>
-                <button id="copyManifestBtn" class="btn secondary" disabled>Copy Manifest URL</button>
+                <button id="copyManifestBtn" class="btn secondary" disabled>Copy URL</button>
             </div>
         </div>
     </div>
@@ -312,9 +355,9 @@
             fetch('/api/addon-info?_t=' + Date.now())
                 .then(r => r.json())
                 .then(info => {
-                    const title = document.getElementById('addonTitle');
+                    const title    = document.getElementById('addonTitle');
                     const subtitle = document.getElementById('addonSubtitle');
-                    const logo = document.getElementById('addonLogo');
+                    const logo     = document.getElementById('addonLogo');
                     if (title && info.name) {
                         title.textContent = info.name;
                         document.title = 'Configure • ' + info.name;
@@ -322,10 +365,17 @@
                     if (subtitle && info.description) subtitle.textContent = info.description;
                     if (logo && info.logoUrl) {
                         logo.src = info.logoUrl;
-                        logo.classList.remove('hidden');
+                        logo.classList.remove('hidden-img');
                     }
+                    document.getElementById('headerSkeleton')?.classList.add('hidden');
+                    document.getElementById('headerContent')?.classList.remove('hidden');
                 })
-                .catch(() => { /* keep defaults */ });
+                .catch(() => {
+                    const title = document.getElementById('addonTitle');
+                    if (title) title.textContent = 'IPTV Addon';
+                    document.getElementById('headerSkeleton')?.classList.add('hidden');
+                    document.getElementById('headerContent')?.classList.remove('hidden');
+                });
         })();
     </script>
 </body>
