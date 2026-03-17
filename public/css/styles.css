@@ -339,6 +339,43 @@ input[type="radio"] {
     filter: grayscale(1);
 }
 
+.playlist-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.4rem;
+}
+
+.playlist-chip {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.1rem;
+    padding: 0.4rem 0.75rem;
+    background: transparent;
+    border: 1px solid var(--glass-border);
+    border-radius: var(--radius-sm);
+    color: var(--text-main);
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: inherit;
+}
+
+.playlist-chip:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: var(--accent);
+}
+
+.chip-label {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.chip-note {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+
 .feature-list {
     list-style: none;
     padding: 0;
