@@ -21,7 +21,7 @@ function createManifest(idPrefix) {
                 genres: []
             }
         ],
-        idPrefixes: idPrefix ? [`xc${idPrefix}_`, `io${idPrefix}_`] : ['xc', 'io'],
+        idPrefixes: idPrefix ? [`xc${idPrefix}_`, `io${idPrefix}_`, `m3${idPrefix}_`] : ['xc', 'io', 'm3'],
         behaviorHints: {
             configurable: true,
             configurationRequired: true

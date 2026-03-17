@@ -23,5 +23,6 @@ module.exports = {
     SQLITE_GC_INTERVAL_MS: parseInt(process.env.SQLITE_GC_INTERVAL_MS || '21600000', 10),
     SQLITE_VACUUM_INTERVAL_MS: parseInt(process.env.SQLITE_VACUUM_INTERVAL_MS || '604800000', 10),
     IPTV_ORG_CACHE_TTL_MS: parseInt(process.env.IPTV_ORG_CACHE_TTL_MS || '') || 21600000,
+    M3U_CACHE_TTL_MS: parseInt(process.env.M3U_CACHE_TTL_MS || '') || 21600000,
     ALLOW_LOCAL_URLS: (process.env.ALLOW_LOCAL_URLS || 'false').toLowerCase() === 'true',
 };

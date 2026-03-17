@@ -21,7 +21,8 @@ function stableStringify(obj) {
 
 const PROVIDER_FILE_MAP = {
     'xtream': 'xtreamProvider',
-    'iptv-org': 'iptvOrgProvider'
+    'iptv-org': 'iptvOrgProvider',
+    'm3u': 'm3uProvider'
 };
 
 function createCacheKey(config) {
@@ -32,6 +33,15 @@ function createCacheKey(config) {
             provider,
             iptvOrgCountry: config.iptvOrgCountry || null,
             iptvOrgCategory: config.iptvOrgCategory || null,
+        };
+    } else if (provider === 'm3u') {
+        minimal = {
+            provider,
+            m3uUrl: config.m3uUrl || null,
+            enableEpg: !!config.enableEpg,
+            epgUrl: config.epgUrl || null,
+            epgOffsetHours: config.epgOffsetHours,
+            reformatLogos: !!config.reformatLogos,
         };
     } else {
         minimal = {
@@ -61,7 +71,11 @@ class M3UEPGAddon {
         this.lastUpdate = 0;
         this.firstCatalogRefreshDone = false;
         this.firstCatalogRefreshPromise = null;
-        this.cacheTtl = this.providerName === 'iptv-org' ? env.IPTV_ORG_CACHE_TTL_MS : CACHE_TTL_MS;
+        const TTL_MAP = {
+            'iptv-org': env.IPTV_ORG_CACHE_TTL_MS,
+            'm3u': env.M3U_CACHE_TTL_MS,
+        };
+        this.cacheTtl = TTL_MAP[this.providerName] ?? CACHE_TTL_MS;
         this.log = makeLogger();
 
         if (typeof this.config.epgOffsetHours === 'string') {
