@@ -8,6 +8,7 @@ const staticDir = path.join(__dirname, 'public');
 app.set('trust proxy', 1);
 app.use(express.static(staticDir));
 app.use(express.json({ limit: '512kb' }));
+app.use(require('compression')());
 
 const { globalIpLimiter } = require('./src/middleware/rateLimiter');
 app.use(globalIpLimiter);

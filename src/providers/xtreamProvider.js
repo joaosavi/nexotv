@@ -51,7 +51,7 @@ async function fetchData(addonInstance) {
     addonInstance.channels = (Array.isArray(live) ? live : []).map(s => {
         const cat = liveCatMap[s.category_id] || s.category_name || s.category_id || 'Live';
         return {
-            id: `iptv_live_${s.stream_id}`,
+            id: `xc${addonInstance.idPrefix}_${s.stream_id}`,
             name: s.name,
             type: 'tv',
             url: `${xtreamUrl}/live/${xtreamUsername}/${xtreamPassword}/${s.stream_id}.m3u8`,
