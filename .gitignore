@@ -24,6 +24,8 @@ data/
 AGENT.md
 CLAUDE.md
 beamup.json
+docs/
+
 
 # Stremio specific
 .well-known/

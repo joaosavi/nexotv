@@ -59,13 +59,27 @@ function parseM3U(text) {
 
         if (line.startsWith('#EXTINF:')) {
             pendingChannel = {
-                tvgId:   extractAttr(line, 'tvg-id'),
-                tvgName: extractAttr(line, 'tvg-name'),
-                logo:    extractAttr(line, 'tvg-logo'),
-                group:   extractAttr(line, 'group-title') || 'Uncategorized',
-                name:    extractChannelName(line),
-                url:     null,
+                tvgId:     extractAttr(line, 'tvg-id'),
+                tvgName:   extractAttr(line, 'tvg-name'),
+                logo:      extractAttr(line, 'tvg-logo'),
+                group:     extractAttr(line, 'group-title') || 'Uncategorized',
+                name:      extractChannelName(line),
+                url:       null,
+                userAgent: extractAttr(line, 'user-agent') || extractAttr(line, 'http-user-agent') || '',
+                referrer:  extractAttr(line, 'referrer') || extractAttr(line, 'http-referrer') || '',
             };
+            continue;
+        }
+
+        if (line.startsWith('#EXTVLCOPT:') && pendingChannel) {
+            const opt = line.slice('#EXTVLCOPT:'.length);
+            const eqIdx = opt.indexOf('=');
+            if (eqIdx !== -1) {
+                const key = opt.slice(0, eqIdx).trim().toLowerCase();
+                const val = opt.slice(eqIdx + 1).trim();
+                if (key === 'http-user-agent') pendingChannel.userAgent = val;
+                if (key === 'http-referrer') pendingChannel.referrer = val;
+            }
             continue;
         }
 

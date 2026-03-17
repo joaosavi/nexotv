@@ -27,6 +27,7 @@ tmp/
 data/
 .dev/
 beamup.json
+docs/
 
 # Editor / IDE
 .vscode/

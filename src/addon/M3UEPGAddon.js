@@ -189,6 +189,13 @@ class M3UEPGAddon {
             return;
         }
 
+        // If data was freshly loaded (e.g. by createAddon's initial updateData), skip re-fetch
+        const JUST_FETCHED_MS = 2 * 60 * 1000;
+        if (this.channels.length && this.lastUpdate && (Date.now() - this.lastUpdate < JUST_FETCHED_MS)) {
+            this.firstCatalogRefreshDone = true;
+            return;
+        }
+
         this.firstCatalogRefreshPromise = (async () => {
             if (CACHE_ENABLED) {
                 sqliteCache.del('addon:data:' + this.cacheKey);
@@ -251,19 +258,35 @@ class M3UEPGAddon {
         const item = this.channelMap.get(id);
         if (!item) return [];
 
+        const reqHeaders = {};
+        if (item.userAgent) reqHeaders['User-Agent'] = item.userAgent;
+        if (item.referrer)  reqHeaders['Referer']    = item.referrer;
+        const behaviorHints = Object.keys(reqHeaders).length
+            ? { notWebReady: true, proxyHeaders: { request: reqHeaders } }
+            : { notWebReady: true };
+
         if (item.urls && item.urls.length > 0) {
             return item.urls.map((url, index) => ({
-                url: url,
+                url,
                 title: item.urls.length > 1 ? `${item.name} - Link ${index + 1}` : `${item.name} - Live`,
-                behaviorHints: { notWebReady: true }
+                behaviorHints,
             }));
         }
 
-        return [{
-            url: item.url,
-            title: `${item.name} - Live`,
-            behaviorHints: { notWebReady: true }
-        }];
+        const streams = [{ url: item.url, title: `${item.name} - Live`, behaviorHints }];
+
+        // For Xtream Codes-style URLs (no file extension), also offer HLS variant.
+        // Pattern: http(s)://host/username/password/streamid  (no dot in the last path segment)
+        const xtreamRe = /^https?:\/\/[^/]+\/[^/]+\/[^/]+\/(\d+)$/;
+        if (xtreamRe.test(item.url)) {
+            streams.unshift({
+                url: item.url + '.m3u8',
+                title: `${item.name} - HLS`,
+                behaviorHints,
+            });
+        }
+
+        return streams;
     }
 
     getDetailedMeta(id) {
