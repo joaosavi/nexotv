@@ -38,6 +38,9 @@
                             aria-controls="panel-xtream">
                             🔑 Xtream API
                         </button>
+                        <button class="tab-btn" role="tab" aria-selected="false" aria-controls="panel-m3u" id="tab-m3u">
+                            M3U / M3U+
+                        </button>
                     </div>
 
                     <!-- IPTV-org Tab Panel -->
@@ -96,6 +99,57 @@
                                 </button>
                             </div>
                         </form>
+                    </div>
+
+                    <!-- M3U / M3U+ tab panel -->
+                    <div class="tab-panel hidden" role="tabpanel" id="panel-m3u" aria-labelledby="tab-m3u">
+                        <h2 class="section-title">M3U / M3U+ Playlist</h2>
+                        <p class="section-desc">Enter a direct M3U or M3U+ playlist URL. Works with Xtream Codes <code>type=m3u_plus</code> links, or any standard M3U playlist URL.</p>
+
+                        <div class="form-group">
+                            <label for="m3uUrl">Playlist URL <span class="required">*</span></label>
+                            <input type="url" id="m3uUrl" name="m3uUrl"
+                                placeholder="http://provider.com/get.php?username=X&amp;password=Y&amp;type=m3u_plus"
+                                autocomplete="off" />
+                        </div>
+
+                        <div class="form-group checkbox-line">
+                            <input type="checkbox" id="m3uEnableEpg" name="m3uEnableEpg" />
+                            <label class="checkbox-label" for="m3uEnableEpg">Enable EPG (program guide)</label>
+                        </div>
+
+                        <div id="m3uEpgOptions" class="hidden">
+                            <div class="form-group">
+                                <label>EPG Source</label>
+                                <div class="radio-group">
+                                    <label class="checkbox-line">
+                                        <input type="radio" name="m3uEpgMode" value="auto" checked />
+                                        <span class="checkbox-label">Auto-detect from playlist header (<code>url-tvg</code>)</span>
+                                    </label>
+                                    <label class="checkbox-line">
+                                        <input type="radio" name="m3uEpgMode" value="custom" />
+                                        <span class="checkbox-label">Custom XMLTV URL</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-group hidden" id="m3uCustomEpgGroup">
+                                <label for="m3uCustomEpgUrl">Custom EPG URL</label>
+                                <input type="url" id="m3uCustomEpgUrl" placeholder="http://provider.com/epg.xml" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="m3uEpgOffsetHours">EPG Time Offset (hours)</label>
+                                <input type="number" id="m3uEpgOffsetHours" value="0" min="-48" max="48" step="0.5" />
+                            </div>
+                        </div>
+
+                        <div class="form-group checkbox-line" style="margin-top: 15px;">
+                            <input type="checkbox" id="m3uReformatLogos" name="m3uReformatLogos" />
+                            <label class="checkbox-label" for="m3uReformatLogos">Reformat Logos (dark poster frame)</label>
+                        </div>
+
+                        <button class="btn primary" id="installM3uBtn" type="button">Install / Update Addon</button>
                     </div>
 
                     <!-- Xtream API Tab Panel -->
@@ -215,6 +269,7 @@
     <script src="/js/configure-common.js"></script>
     <script src="/js/xtream-config.js"></script>
     <script src="/js/iptv-org-config.js"></script>
+    <script src="/js/m3u-config.js"></script>
     <script>
         (function () {
             fetch('/api/addon-info?_t=' + Date.now())
