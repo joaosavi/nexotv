@@ -5,12 +5,12 @@ const { createManifest } = require('./manifest');
 const { M3UEPGAddon, createCacheKey, buildPromiseCache, CACHE_ENABLED } = require('./M3UEPGAddon');
 
 async function createAddon(config) {
-    const manifest = createManifest();
-
     config.instanceId = config.instanceId ||
         (crypto.randomUUID ? crypto.randomUUID() : crypto.randomBytes(8).toString('hex'));
 
     const cacheKey = createCacheKey(config);
+    const idPrefix = cacheKey.slice(0, 8);
+    const manifest = createManifest(idPrefix);
     const debugFlag = !!env.DEBUG;
     if (debugFlag) {
         console.log('[DEBUG] createAddon start', { cacheKey, provider: config.provider || 'xtream' });
@@ -35,6 +35,13 @@ async function createAddon(config) {
             console.error('[ADDON] Initial update failed:', e.message);
         }
         addonInstance.buildGenresInManifest();
+
+        let iface;
+        const _origBuildGenres = addonInstance.buildGenresInManifest.bind(addonInstance);
+        addonInstance.buildGenresInManifest = () => {
+            _origBuildGenres();
+            if (iface) iface._cleanManifest = null;
+        };
 
         builder.defineCatalogHandler(async (args) => {
             const start = Date.now();
@@ -100,7 +107,7 @@ async function createAddon(config) {
             }
         });
 
-        const iface = builder.getInterface();
+        iface = builder.getInterface();
         iface.addonInstance = addonInstance;
         return iface;
     })();

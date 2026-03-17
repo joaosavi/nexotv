@@ -57,7 +57,7 @@ async function fetchData(addonInstance) {
         const logo = logoMap[ch.id] || ch.logo || '';
 
         channels.push({
-            id: `iptv_org_${ch.id}`,
+            id: `io${addonInstance.idPrefix}_${ch.id}`,
             name: ch.name,
             type: 'tv',
             url: urls[0],

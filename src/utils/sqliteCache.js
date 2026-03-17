@@ -28,7 +28,8 @@ function init(dbPath) {
             key TEXT PRIMARY KEY,
             value BLOB,
             expires_at INTEGER
-        )
+        );
+        CREATE INDEX IF NOT EXISTS idx_expires ON CacheEntry(expires_at);
     `);
 
     log.debug('SQLite cache initialized', { path: resolvedPath });

@@ -17,10 +17,12 @@ npm-debug.log*
 
 # Project specific
 .agent/
+.claude/
 .temp/
 tmp/
 data/
 AGENT.md
+CLAUDE.md
 beamup.json
 
 # Stremio specific

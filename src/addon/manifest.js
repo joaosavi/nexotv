@@ -1,6 +1,6 @@
 const env = require('../config/env');
 
-function createManifest() {
+function createManifest(idPrefix) {
     return {
         id: 'org.stremio.iptv-addon',
         version: '1.2.0',
@@ -21,7 +21,7 @@ function createManifest() {
                 genres: []
             }
         ],
-        idPrefixes: ['iptv_', 'iptvorg_'],
+        idPrefixes: idPrefix ? [`xc${idPrefix}_`, `io${idPrefix}_`] : ['xc', 'io'],
         behaviorHints: {
             configurable: true,
             configurationRequired: true
