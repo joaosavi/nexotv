@@ -48,10 +48,16 @@
 ═══════════════════════════════════════════════════════════ */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { font-size: 16px; }
+html {
+    font-size: 16px;
+    overflow-x: hidden;
+    width: 100%;
+}
 
 body {
     margin: 0;
+    width: 100%;
+    overflow-x: hidden;
     font-family: var(--font);
     font-size: 1rem;
     background-color: var(--bg);
@@ -85,6 +91,7 @@ code {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    width: 100%;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -94,11 +101,12 @@ code {
     position: sticky;
     top: 0;
     z-index: 100;
+    width: 100%;
     background: rgba(6, 10, 18, 0.85);
     backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
     border-bottom: 1px solid var(--border);
-    padding: 0 2rem;
+    padding: 0 1.5rem;
 }
 
 .header-inner {
@@ -945,8 +953,8 @@ input[type="radio"]:checked::after {
 @media (max-width: 960px) {
     .main-content {
         grid-template-columns: 1fr;
-        padding: 1.75rem 1.5rem;
-        gap: 1.5rem;
+        padding: 1.5rem 1rem;
+        gap: 1.25rem;
     }
 
     .about-card { position: static; }
@@ -954,26 +962,28 @@ input[type="radio"]:checked::after {
     /* Config section first, about second on mobile */
     .config-section { order: 1; }
     .about-section  { order: 2; }
-
 }
 
 @media (max-width: 600px) {
-    .app-header { padding: 0 1.25rem; }
+    .app-header { padding: 0 1rem; }
 
-    .card { padding: 1.5rem; }
+    .card { padding: 1.25rem 1rem; }
 
-    .main-content { padding: 1.5rem 1.25rem; }
+    .main-content { padding: 1rem; }
+
+    .info-banner { font-size: 0.85rem; }
 
     /* Full-width install buttons on small screens */
     .form-actions { width: 100%; }
     .form-actions .btn { width: 100%; justify-content: center; }
 
-    .overlay-box { padding: 1.75rem; }
+    .overlay-box { padding: 1.5rem 1.25rem; }
 
     .overlay-actions { flex-direction: column; }
     .overlay-actions button { min-width: 0; }
 }
 
 @media (max-width: 380px) {
-    .tab-btn { padding: 0.75rem 0.875rem; font-size: 0.875rem; }
+    .tab-btn { padding: 0.625rem 0.75rem; font-size: 0.875rem; }
+    .card { padding: 1rem 0.875rem; }
 }
