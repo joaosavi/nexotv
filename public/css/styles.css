@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
    Fonts
 ═══════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
 
 /* ═══════════════════════════════════════════════════════════
    Variables
@@ -29,9 +29,9 @@
     --text-2:        #7a90ae;
     --text-3:        #3a4f6a;
 
-    --font:          'Geist', system-ui, sans-serif;
-    --font-display:  'Geist', system-ui, sans-serif;
-    --mono:          'Geist Mono', monospace;
+    --font:          'Inter', system-ui, sans-serif;
+    --font-display:  'Inter', system-ui, sans-serif;
+    --mono:          'Fira Code', monospace;
 
     --r-xs:  6px;
     --r-sm:  10px;
