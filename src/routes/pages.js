@@ -36,6 +36,8 @@ router.get('/:token/configure-iptv-org', (req, res) => {
 
 router.get('/manifest.json', (req, res) => {
     const manifest = createManifest();
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    manifest.behaviorHints.configureUrl = `${baseUrl}/configure`;
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', '*');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
