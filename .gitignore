@@ -9,11 +9,26 @@ node_modules/
 .vscode/
 .idea/
 *.swp
+*.swo
+
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
 
 # Logs
 *.log
 npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Test coverage
+coverage/
 
 # Project specific
 .agent/
@@ -25,7 +40,6 @@ AGENT.md
 CLAUDE.md
 beamup.json
 docs/
-
 
 # Stremio specific
 .well-known/
