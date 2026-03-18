@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
    Fonts
 ═══════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Fira+Code:wght@400;500&display=swap');
 
 /* ═══════════════════════════════════════════════════════════
    Variables
@@ -29,8 +29,8 @@
     --text-2:        #7a90ae;
     --text-3:        #3a4f6a;
 
-    --font:          'Inter', system-ui, sans-serif;
-    --font-display:  'Inter', system-ui, sans-serif;
+    --font:          'DM Sans', system-ui, sans-serif;
+    --font-display:  'Syne', system-ui, sans-serif;
     --mono:          'Fira Code', monospace;
 
     --r-xs:  6px;
@@ -194,43 +194,6 @@ code {
     color: var(--text-2);
     line-height: 1.4;
     font-weight: 400;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   Hero Banner
-═══════════════════════════════════════════════════════════ */
-.hero-banner {
-    background: linear-gradient(
-        135deg,
-        rgba(45, 212, 191, 0.06) 0%,
-        rgba(45, 212, 191, 0.02) 50%,
-        transparent 100%
-    );
-    border-bottom: 1px solid var(--border);
-    padding: 2.5rem 2rem;
-}
-
-.hero-inner {
-    max-width: 1160px;
-    margin: 0 auto;
-}
-
-.hero-inner h2 {
-    margin: 0 0 0.5rem;
-    font-size: 1.75rem;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-    background: linear-gradient(135deg, var(--text) 0%, var(--accent-2) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-}
-
-.hero-inner p {
-    margin: 0;
-    font-size: 1rem;
-    color: var(--text-2);
-    line-height: 1.6;
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -992,8 +955,6 @@ input[type="radio"]:checked::after {
     .config-section { order: 1; }
     .about-section  { order: 2; }
 
-    .hero-banner { padding: 2rem 1.5rem; }
-    .hero-inner h2 { font-size: 1.4rem; }
 }
 
 @media (max-width: 600px) {
@@ -1002,9 +963,6 @@ input[type="radio"]:checked::after {
     .card { padding: 1.5rem; }
 
     .main-content { padding: 1.5rem 1.25rem; }
-
-    .hero-banner { padding: 1.75rem 1.25rem; }
-    .hero-inner h2 { font-size: 1.2rem; }
 
     /* Full-width install buttons on small screens */
     .form-actions { width: 100%; }
