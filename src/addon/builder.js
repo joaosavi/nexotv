@@ -26,7 +26,7 @@ async function createAddon(config) {
     const buildPromise = (async () => {
         const builder = new addonBuilder(manifest);
         const addonInstance = new M3UEPGAddon(config, manifest);
-        await addonInstance.loadFromCache();
+        await addonInstance.loadChannelsFromCache();
         try {
             if (!addonInstance.lastUpdate || (Date.now() - addonInstance.lastUpdate > addonInstance.updateInterval)) {
                 await addonInstance.updateData(true);
