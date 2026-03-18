@@ -96,32 +96,46 @@ class M3UEPGAddon {
         });
     }
 
-    async loadFromCache() {
+    async saveChannelsToCache() {
         if (!CACHE_ENABLED) return;
-        const cacheKey = 'addon:data:' + this.cacheKey;
-        const cached = sqliteCache.get(cacheKey);
+        sqliteCache.setRaw('addon:channels:' + this.cacheKey, {
+            channels: this.channels,
+            lastUpdate: this.lastUpdate
+        }, this.cacheTtl);
+        this.log.debug('Channels saved to cache', { count: this.channels.length });
+    }
+
+    async loadChannelsFromCache() {
+        if (!CACHE_ENABLED) return;
+        const cached = sqliteCache.getRaw('addon:channels:' + this.cacheKey);
         if (cached) {
             this.channels = cached.channels || [];
             this.channelMap = new Map(this.channels.map(c => [c.id, c]));
-            this.epgData = cached.epgData || {};
             this.lastUpdate = cached.lastUpdate || 0;
-            this.log.debug('Cache hit for data', {
-                channels: this.channels.length,
-                lastUpdate: new Date(this.lastUpdate).toISOString()
-            });
+            this.log.debug('Channels loaded from cache', { count: this.channels.length });
         }
     }
 
-    async saveToCache() {
+    async saveEpgToCache() {
         if (!CACHE_ENABLED) return;
-        const cacheKey = 'addon:data:' + this.cacheKey;
-        const entry = {
-            channels: this.channels,
-            epgData: this.epgData,
-            lastUpdate: this.lastUpdate
-        };
-        sqliteCache.set(cacheKey, entry, this.cacheTtl);
-        this.log.debug('Saved data to cache');
+        if (!this.epgData || Object.keys(this.epgData).length === 0) return;
+        sqliteCache.set('addon:epg:' + this.cacheKey, { epgData: this.epgData }, this.cacheTtl);
+        this.log.debug('EPG saved to cache', { channels: Object.keys(this.epgData).length });
+    }
+
+    async loadEpgFromCache() {
+        if (!CACHE_ENABLED) return;
+        const cached = sqliteCache.get('addon:epg:' + this.cacheKey);
+        if (cached) {
+            this.epgData = cached.epgData || {};
+            this.log.debug('EPG loaded from cache', { channels: Object.keys(this.epgData).length });
+        }
+    }
+
+    async ensureEpgLoaded() {
+        if (this.epgData && Object.keys(this.epgData).length > 0) return;
+        if (!CACHE_ENABLED) return;
+        await this.loadEpgFromCache();
     }
 
     buildGenresInManifest() {
@@ -168,7 +182,10 @@ class M3UEPGAddon {
             await providerModule.fetchData(this);
             this.channelMap = new Map(this.channels.map(c => [c.id, c]));
             this.lastUpdate = Date.now();
-            if (CACHE_ENABLED) await this.saveToCache();
+            if (CACHE_ENABLED) {
+                await this.saveChannelsToCache();
+                await this.saveEpgToCache();
+            }
             this.buildGenresInManifest();
             this.log.debug('Data update complete', {
                 channels: this.channels.length,
@@ -196,7 +213,8 @@ class M3UEPGAddon {
 
         this.firstCatalogRefreshPromise = (async () => {
             if (CACHE_ENABLED) {
-                sqliteCache.del('addon:data:' + this.cacheKey);
+                sqliteCache.del('addon:channels:' + this.cacheKey);
+                sqliteCache.del('addon:epg:' + this.cacheKey);
             }
             await this.updateData(true);
             this.firstCatalogRefreshDone = true;
@@ -290,6 +308,7 @@ class M3UEPGAddon {
 
     async getDetailedMeta(id) {
         await this.ensureDataLoaded();
+        await this.ensureEpgLoaded();
         const item = this.channelMap.get(id);
         if (!item) return null;
         const epgId = item.attributes?.['tvg-id'] || item.attributes?.['tvg-name'];
@@ -347,7 +366,7 @@ class M3UEPGAddon {
             await this._loadPromise;
             return;
         }
-        this._loadPromise = this.loadFromCache().finally(() => { this._loadPromise = null; });
+        this._loadPromise = this.loadChannelsFromCache().finally(() => { this._loadPromise = null; });
         await this._loadPromise;
         this._resetEvictTimer();
     }
