@@ -1,221 +1,187 @@
-# IPTV Stremio Addon
+# NexoTV
 
 > A self-hostable, token-based, privacy-friendly IPTV addon for **Stremio**.
-> Connect your IPTV service using Xtream Codes credentials, load any **M3U/M3U+ playlist**, or use the free **IPTV-org public channel list**.
+> Connect via **Xtream Codes**, load any **M3U/M3U+ playlist**, or browse the free **IPTV-org public channel list**.
 
 ---
 
-## ✨ Features
+## Features
 
-- 📺 **Three Providers:** Live TV channels via **Xtream Codes JSON API**, any **M3U/M3U+ playlist URL**, or the **IPTV-org Public Repository**
-- ⚙️ **Unified Configuration:** Responsive, tabbed setup interface for all three providers
-- 📡 **EPG Support:** XMLTV from Xtream panel, embedded M3U playlist header (`url-tvg`/`x-tvg-url`), or a custom XMLTV URL — pruned and optimized for low memory and CPU footprint
-- 🔍 **Filtering & Search:** Category-based browsing and search, plus multi-select Country and Category filtering for IPTV-org (with intra-category OR, inter-category AND logic)
-- 🔐 Config tokens: base64-encoded (plain) or AES-256-GCM encrypted (with `CONFIG_SECRET`)
-- ⚡ Persistent SQLite cache with gzip compression, configurable TTL, and automatic garbage collection
-- 🖼️ Configurable Channel logo proxy with multi-source fallback, per-user resize opt-in, and optional caching
-- 🛡️ SSRF-protected server-side CORS bypass proxy for pre-flight validation
-- 🛑 Hybrid Rate Limiting to prevent API abuse (Global IP & Token-based)
+- **Three Providers:** Xtream Codes JSON API, any M3U/M3U+ playlist URL, or the IPTV-org public repository
+- **Unified Config UI:** Responsive, tabbed setup page for all providers
+- **EPG Support:** XMLTV from Xtream panel, embedded playlist header (`url-tvg`/`x-tvg-url`), or a custom XMLTV URL — pruned and optimized for low memory usage
+- **Filtering & Search:** Category browsing, full-text search, and multi-select Country/Category filtering for IPTV-org (OR within category, AND across categories)
+- **Encrypted Tokens:** Base64URL (plain) or AES-256-GCM (with `CONFIG_SECRET`)
+- **Persistent Cache:** SQLite with gzip compression, configurable TTL, and automatic garbage collection
+- **Logo Proxy:** Multi-source fallback, optional per-user resize, and optional caching
+- **SSRF Protection:** Server-side CORS bypass proxy with hostname + DNS validation
+- **Rate Limiting:** Global IP-based and per-token limits to prevent abuse
 
 ---
 
-## 🚀 Quick Start (Local / Node.js)
+## Quick Start
 
 ```bash
-git clone https://github.com/joaosavi/iptv-stremio-addon.git
-cd iptv-stremio-addon
+git clone https://github.com/joaosavi/nexotv.git
+cd nexotv
 cp .env.example .env
 npm install
 npm start
-# Server runs on PORT (default 7000)
-open http://localhost:7000/configure
+# Open http://localhost:7000/configure
 ```
 
 ---
 
-## 🐳 Docker
+## Docker
 
 ```bash
-docker build -t iptv-stremio-addon .
+docker build -t nexotv .
 docker run -d \
   -e PORT=7000 \
-  -e DEBUG_MODE=false \
-  -e CACHE_ENABLED=true \
   -v ./data:/app/data \
   -p 7000:7000 \
-  --name iptv-addon \
-  iptv-stremio-addon
+  --name nexotv \
+  nexotv
 ```
 
 ### Docker Compose
 
-```yaml
-services:
-  addon:
-    build: .
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - ./data:/app/data
-    ports:
-      - "7000:7000"
+```bash
+cp .env.example .env
+docker compose up -d
 ```
 
 ---
 
-## 🎬 How to Install in Stremio
+## Installing in Stremio
 
 1. Open `http://your-host/configure`
-2. Choose your preferred tab:
-   - **Xtream API:** Enter your panel URL, username, password, and EPG options.
-   - **IPTV-org (Free):** Select Country and Category from the searchable dropdowns.
-   - **M3U/M3U+:** Paste your playlist URL. EPG URL is auto-detected from the playlist header or can be set manually.
-3. Click **Install / Update Addon**
-4. A manifest URL is generated — click **Open in Stremio** or copy the URL
+2. Pick a provider tab:
+   - **Xtream API** — enter your panel URL, username, and password
+   - **IPTV-org** — select Country and Category from the searchable dropdowns
+   - **M3U/M3U+** — paste a playlist URL; EPG is auto-detected or can be set manually
+3. Click **Install Addon**
+4. Click **Open in Stremio** or copy the manifest URL
 
 ---
 
-## ⚙️ Environment Variables
+## Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `PORT` | `7000` | HTTP server port |
-| `CACHE_ENABLED` | `true` | Enable/disable persistent SQLite caching |
-| `CACHE_TTL_MS` | `21600000` (6h) | Cache TTL in milliseconds for Xtream data |
-| `IPTV_ORG_CACHE_TTL_MS` | `21600000` (6h) | Cache TTL in milliseconds for IPTV-org data |
-| `M3U_CACHE_TTL_MS` | `21600000` (6h) | Cache TTL in milliseconds for M3U/M3U+ data |
-| `MAX_CACHE_ENTRIES` | `300` | Max in-memory entries (build/interface caches) |
-| `SQLITE_PATH` | `./data/cache.sqlite` | Path to the SQLite cache database file |
-| `CONFIG_SECRET` | *(unset)* | Enables AES-256-GCM encryption for tokens (must be ≥16 chars). Without this, tokens are plain base64. |
-| `DEBUG_MODE` | `false` | Enable verbose debug logging |
-| `PREFETCH_ENABLED` | `true` | Enable server-side CORS bypass for pre-flight |
-| `PREFETCH_MAX_BYTES` | `150000000` | Max bytes for prefetch response (150 MB) |
-| `ADDON_NAME` | `IPTV Stremio Addon` | Addon name shown in Stremio |
-| `ADDON_DESCRIPTION` | `Stream your IPTV channels in Stremio` | Addon description shown in Stremio |
+| `ADDON_NAME` | `NexoTV` | Addon name shown in Stremio |
+| `ADDON_DESCRIPTION` | `Stream your IPTV channels in Stremio` | Addon description |
 | `ADDON_LOGO_URL` | *(unset)* | URL for the addon logo in Stremio |
-| `LOGO_CACHE_ENABLED` | `true` | Apply Cache-Control headers to logo proxy responses |
-| `IP_RATE_LIMIT_ENABLED` | `true` | Enable global IP-based rate limiting |
-| `IP_RATE_LIMIT_WINDOW_MS` | `300000` (5m) | Window in ms for IP rate limit |
-| `IP_RATE_LIMIT_MAX` | `300` | Max requests per window for IP rate limit |
-| `TOKEN_RATE_LIMIT_ENABLED` | `true` | Enable token-based rate limiting for addon routes |
-| `TOKEN_RATE_LIMIT_WINDOW_MS` | `60000` (1m) | Window in ms for token rate limit |
-| `TOKEN_RATE_LIMIT_MAX` | `60` | Max requests per window for token rate limit |
-| `SQLITE_GC_INTERVAL_MS` | `21600000` (6h) | How often to delete expired cache entries from SQLite |
-| `SQLITE_VACUUM_INTERVAL_MS` | `604800000` (7d) | How often to run VACUUM to reclaim free disk space |
-| `ALLOW_LOCAL_URLS` | `false` | Allow localhost/private IPs for testing endpoints |
+| `CONFIG_SECRET` | *(unset)* | Enables AES-256-GCM token encryption (must be ≥16 chars) |
+| `CACHE_ENABLED` | `true` | Enable persistent SQLite caching |
+| `CACHE_TTL_MS` | `21600000` | Xtream cache TTL in ms (default 6h) |
+| `IPTV_ORG_CACHE_TTL_MS` | `21600000` | IPTV-org cache TTL in ms |
+| `M3U_CACHE_TTL_MS` | `21600000` | M3U/M3U+ cache TTL in ms |
+| `MAX_CACHE_ENTRIES` | `300` | Max in-memory LRU cache entries |
+| `SQLITE_PATH` | `./data/cache.sqlite` | SQLite database path |
+| `SQLITE_GC_INTERVAL_MS` | `21600000` | How often to purge expired cache entries (6h) |
+| `SQLITE_VACUUM_INTERVAL_MS` | `604800000` | How often to run VACUUM (7d) |
+| `PREFETCH_ENABLED` | `true` | Enable server-side CORS bypass proxy |
+| `PREFETCH_MAX_BYTES` | `150000000` | Max bytes per prefetch response (150 MB) |
+| `LOGO_CACHE_ENABLED` | `true` | Cache-Control headers on logo proxy responses |
+| `IP_RATE_LIMIT_ENABLED` | `true` | Global IP-based rate limiting |
+| `IP_RATE_LIMIT_WINDOW_MS` | `300000` | IP rate limit window in ms (5m) |
+| `IP_RATE_LIMIT_MAX` | `300` | Max requests per window per IP |
+| `TOKEN_RATE_LIMIT_ENABLED` | `true` | Per-token rate limiting on addon routes |
+| `TOKEN_RATE_LIMIT_WINDOW_MS` | `60000` | Token rate limit window in ms (1m) |
+| `TOKEN_RATE_LIMIT_MAX` | `60` | Max requests per window per token |
+| `DEBUG_MODE` | `false` | Verbose debug logging |
+| `ALLOW_LOCAL_URLS` | `false` | Allow localhost/private IPs (for local testing) |
+
+> Set `CONFIG_SECRET` whenever the instance is publicly accessible.
 
 ---
 
-## 📡 HTTP Endpoints
+## API Endpoints
 
 | Method | Route | Description |
 |--------|-------|-------------|
-| GET | `/` | Redirect to `/configure` |
-| GET | `/configure` | Unified configuration form |
-| GET | `/configure-xtream` | Redirects to `/configure` (Backwards compat) |
-| GET | `/configure-iptv-org` | Alias for unified configuration form |
-| GET | `/health` | Health check (`{ status: 'OK' }`) |
-| POST | `/encrypt` | Returns encrypted token (requires `CONFIG_SECRET`) |
+| GET | `/configure` | Configuration UI |
+| GET | `/health` | Health check |
+| GET | `/api/addon-info` | Addon name / description / logo |
+| GET | `/api/capabilities` | `{ encryptionEnabled: bool }` |
+| POST | `/encrypt` | Returns encrypted token |
 | POST | `/api/prefetch` | Server-side CORS bypass fetch |
-| GET | `/api/capabilities` | Returns `{ encryptionEnabled: bool }` |
-| GET | `/api/addon-info` | Returns addon name/description/logo |
-| GET | `/:token/configure` | Reconfigure (pre-fills from token) |
-| GET | `/:token/configure-xtream` | Redirects to `/:token/configure` |
-| GET | `/:token/configure-iptv-org` | Alias for unified reconfigure |
 | GET | `/:token/manifest.json` | Stremio manifest |
 | GET | `/:token/catalog/tv/iptv_channels.json` | Channel catalog |
 | GET | `/:token/stream/tv/:id.json` | Stream URL |
-| GET | `/:token/meta/tv/:id.json` | Channel meta + EPG info |
-| GET | `/:token/logo/:tvgId.png` | Channel logo proxy |
+| GET | `/:token/meta/tv/:id.json` | Channel metadata + EPG |
+| GET | `/:token/logo/:tvgId.png` | Logo proxy |
+| GET | `/:token/configure` | Reconfigure (pre-filled from token) |
 
 ---
 
-## 🔐 Configuration Tokens
+## Token Format
 
-| Type | Format | Notes |
-|------|--------|-------|
-| Plain | Base64URL JSON (no prefix) | Anyone with the URL can decode it |
-| Encrypted | `enc:<ciphertext>` | Requires `CONFIG_SECRET` on server |
-
-> ⚠️ Always set `CONFIG_SECRET` if you're sharing your hosted instance publicly.
+| Type | Format | When |
+|------|--------|------|
+| Plain | Base64URL-encoded JSON | No `CONFIG_SECRET` set |
+| Encrypted | `enc:<ciphertext>` | `CONFIG_SECRET` is set |
 
 ---
 
-## 🧱 Architecture
+## Architecture
 
 ```
-Browser Client (Config UI)
-        │ Pre-flight: validate credentials / playlist URL + EPG
-        ▼
-/api/prefetch  ← CORS bypass, SSRF-guarded (hostname + DNS check)
-        │ Config JSON → base64url or enc: token
-        ▼
-server.js  ← decrypt token → createAddon(config) → SQLite cache
-        │
-        ▼
-src/addon/builder.js  ← M3UEPGAddon class (Dynamic Provider)
-        ├─▶ xtreamProvider   → fetch Xtream channels + EPG
-        ├─▶ iptvOrgProvider  → fetch IPTV-org channels
-        └─▶ m3uProvider      → fetch + parse M3U/M3U+ playlist + EPG
-        │
-        │ Stremio SDK routes
-        ▼
-Stremio Client  (Catalog / Meta / Stream)
+Browser (Config UI)
+    │ preflight: validate URL / credentials
+    ▼
+POST /api/prefetch  ← SSRF-guarded (hostname + DNS check)
+    │ config JSON → token (base64url or enc:)
+    ▼
+server.js  → decrypt token → createAddon(config) → SQLite cache
+    │
+    ▼
+src/addon/builder.js  (M3UEPGAddon)
+    ├── xtreamProvider   → Xtream Codes API
+    ├── iptvOrgProvider  → iptv-org JSON API
+    └── m3uProvider      → M3U/M3U+ playlist + EPG
+    │
+    ▼
+Stremio Client  (catalog / stream / meta)
 ```
 
----
-
-## 🛡️ Security
-
-| Area | Defense |
-|------|---------|
-| SSRF (prefetch) | Blocks RFC1918 + loopback by hostname string AND by DNS resolution |
-| Token leakage | base64 (plain) or AES-256-GCM (with `CONFIG_SECRET`) |
-| Credential exposure | Warn shown in UI when `CONFIG_SECRET` is not configured |
-| EPG size | `PREFETCH_MAX_BYTES` limits response size |
-| API Abuse | Global IP and Token-based Rate Limiting to prevent scraping or DoS |
-
----
-
-## 🗄️ Caching
+### Caching (3 layers)
 
 | Layer | Contents |
 |-------|----------|
-| SQLite (persistent) | Channels + EPG data per config (gzip-compressed BLOBs with TTL) |
-| Build promise cache (in-memory) | De-duplicates concurrent addon builds for same config |
-| Interface cache (in-memory) | Caches built Stremio SDK interfaces per token |
-
-Cache key = MD5 of normalized config (URL, username, EPG options).  
-SQLite uses WAL mode for concurrency, with automatic garbage collection (2h) and daily VACUUM.
+| SQLite (persistent) | Channels + EPG per config — gzip BLOBs with TTL |
+| Build promise cache | Deduplicates concurrent `createAddon()` calls |
+| Interface LRU cache | Caches Stremio SDK interface objects per token |
 
 ---
 
-## 🐞 Troubleshooting
+## Troubleshooting
 
-| Symptom | Likely Cause | Action |
-|---------|--------------|--------|
-| Buttons never enable | Manifest build error | Check server logs; ensure Xtream panel is reachable |
-| ⚠ WARNING in config log | No `CONFIG_SECRET` | Set it in `.env` if sharing publicly |
-| EPG shows nothing | EPG fetch failed | Check EPG URL; try custom XMLTV source |
-| Logo missing | No matching logo source | Expected; placeholder is shown |
-
----
-
-## ⚖️ Legal Notice
-
-This project **does not provide** IPTV content.  
-You are solely responsible for ensuring that the streams you use are legal in your jurisdiction.
+| Symptom | Likely cause | Fix |
+|---------|--------------|-----|
+| Buttons never enable | Manifest build failed | Check server logs; verify provider is reachable |
+| WARNING in install log | `CONFIG_SECRET` not set | Set it in `.env` if sharing publicly |
+| EPG shows nothing | EPG fetch failed | Check EPG URL; try a custom XMLTV source |
+| Logo missing | No matching logo source | Expected — placeholder is shown |
 
 ---
 
-## 🙏 Credits
+## Legal Notice
 
-Improved by [joaosavi](https://github.com/joaosavi).  
-Based on the original work by [Inside4ndroid](https://github.com/Inside4ndroid).
+NexoTV does not provide any IPTV content.
+You are solely responsible for ensuring the streams you use are legal in your jurisdiction.
 
 ---
 
-## 📄 License
+## Credits
 
-MIT License. See `LICENSE` file.
+Developed by [joaosavi](https://github.com/joaosavi).
+Based on original work by [Inside4ndroid](https://github.com/Inside4ndroid).
+
+---
+
+## License
+
+MIT — see `LICENSE`.

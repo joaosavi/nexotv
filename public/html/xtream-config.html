@@ -3,10 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Configure — IPTV Addon</title>
+    <title>Configure — NexoTV</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="description"
-        content="Configure your IPTV Stremio Addon. Choose between free IPTV-org channels or your own Xtream API provider.">
+        content="Configure NexoTV. Choose between free IPTV-org channels, your Xtream API provider, or any M3U playlist.">
     <meta name="color-scheme" content="dark">
     <link rel="stylesheet" href="/css/styles.css">
 </head>
@@ -372,7 +372,7 @@
                 })
                 .catch(() => {
                     const title = document.getElementById('addonTitle');
-                    if (title) title.textContent = 'IPTV Addon';
+                    if (title) title.textContent = 'NexoTV';
                     document.getElementById('headerSkeleton')?.classList.add('hidden');
                     document.getElementById('headerContent')?.classList.remove('hidden');
                 });
