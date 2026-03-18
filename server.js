@@ -14,7 +14,7 @@ const { globalIpLimiter } = require('./src/middleware/rateLimiter');
 app.use(globalIpLimiter);
 
 app.use((req, res, next) => {
-    res.setHeader('X-App', 'IPTV-Stremio-Addon');
+    res.setHeader('X-App', 'NexoTV');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', '*');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

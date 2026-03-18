@@ -88,7 +88,7 @@ router.post('/api/prefetch', async (req, res) => {
             fetched = await fetch(url, {
                 method: 'GET',
                 signal: controller.signal,
-                headers: { 'User-Agent': 'IPTV-Stremio-Addon Prefetch/1.1' }
+                headers: { 'User-Agent': 'NexoTV Prefetch/2.0' }
             });
         } finally {
             clearTimeout(timeout);
