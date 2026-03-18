@@ -25,4 +25,5 @@ module.exports = {
     IPTV_ORG_CACHE_TTL_MS: parseInt(process.env.IPTV_ORG_CACHE_TTL_MS || '') || 21600000,
     M3U_CACHE_TTL_MS: parseInt(process.env.M3U_CACHE_TTL_MS || '') || 21600000,
     ALLOW_LOCAL_URLS: (process.env.ALLOW_LOCAL_URLS || 'false').toLowerCase() === 'true',
+    DATA_MEMORY_TTL_MS: parseInt(process.env.DATA_MEMORY_TTL_MS || '300000', 10),
 };
