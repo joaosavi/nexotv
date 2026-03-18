@@ -1,25 +1,16 @@
 (function () {
     'use strict';
 
-    // Public playlists shown as quick-fill chips.
-    // These are third-party links — the addon does not host, endorse, or verify this content.
-    const PUBLIC_PLAYLISTS = [
-        {
-            label: 'Canais BR 01',
-            note: '~200 canais',
-            url: 'https://raw.githubusercontent.com/Ramys/Iptv-Brasil-2026/master/CanaisBR01.m3u8',
-        },
-    ];
-
     const chipsContainer = document.getElementById('publicPlaylistChips');
     const m3uUrlInput    = document.getElementById('m3uUrl');
 
-    if (chipsContainer && m3uUrlInput) {
-        PUBLIC_PLAYLISTS.forEach(({ label, note, url }) => {
+    function renderChips(playlists) {
+        if (!chipsContainer || !m3uUrlInput || !Array.isArray(playlists)) return;
+        playlists.forEach(({ label, note, url }) => {
             const btn = document.createElement('button');
             btn.type = 'button';
             btn.className = 'playlist-chip';
-            btn.innerHTML = `<span class="chip-label">${label}</span><span class="chip-note">${note}</span>`;
+            btn.innerHTML = `<span class="chip-label">${label}</span><span class="chip-note">${note || ''}</span>`;
             btn.title = url;
             btn.addEventListener('click', () => {
                 m3uUrlInput.value = url;
@@ -27,6 +18,13 @@
             });
             chipsContainer.appendChild(btn);
         });
+    }
+
+    if (chipsContainer && m3uUrlInput) {
+        fetch('/api/public-playlists')
+            .then(r => r.json())
+            .then(renderChips)
+            .catch(() => {});
     }
 
     const installBtn       = document.getElementById('installM3uBtn');
