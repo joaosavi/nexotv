@@ -4,6 +4,7 @@ const sqliteCache = require('../utils/sqliteCache');
 const { makeLogger } = require('../utils/logger');
 const { parseEPG, getCurrentProgram, getUpcomingPrograms } = require('../parsers/epgParser');
 const env = require('../config/env');
+const { PROVIDER_FILE_MAP, UPDATE_INTERVAL_MS } = require('../config/constants');
 
 const CACHE_ENABLED = env.CACHE_ENABLED;
 const CACHE_TTL_MS = env.CACHE_TTL_MS;
@@ -19,10 +20,6 @@ function stableStringify(obj) {
     return JSON.stringify(obj, Object.keys(obj).sort());
 }
 
-const PROVIDER_FILE_MAP = {
-    'xtream': 'xtreamProvider',
-    'iptv-org': 'iptvOrgProvider'
-};
 
 function createCacheKey(config) {
     const provider = config.provider || 'xtream';
@@ -32,6 +29,15 @@ function createCacheKey(config) {
             provider,
             iptvOrgCountry: config.iptvOrgCountry || null,
             iptvOrgCategory: config.iptvOrgCategory || null,
+        };
+    } else if (provider === 'm3u') {
+        minimal = {
+            provider,
+            m3uUrl: config.m3uUrl || null,
+            enableEpg: !!config.enableEpg,
+            epgUrl: config.epgUrl || null,
+            epgOffsetHours: config.epgOffsetHours,
+            reformatLogos: !!config.reformatLogos,
         };
     } else {
         minimal = {
@@ -54,14 +60,18 @@ class M3UEPGAddon {
         this.manifestRef = manifestRef;
         this.cacheKey = createCacheKey(config);
         this.idPrefix = this.cacheKey.slice(0, 8);
-        this.updateInterval = 3600000;
+        this.updateInterval = UPDATE_INTERVAL_MS;
         this.channels = [];
         this.channelMap = new Map();
         this.epgData = {};
         this.lastUpdate = 0;
         this.firstCatalogRefreshDone = false;
         this.firstCatalogRefreshPromise = null;
-        this.cacheTtl = this.providerName === 'iptv-org' ? env.IPTV_ORG_CACHE_TTL_MS : CACHE_TTL_MS;
+        const TTL_MAP = {
+            'iptv-org': env.IPTV_ORG_CACHE_TTL_MS,
+            'm3u': env.M3U_CACHE_TTL_MS,
+        };
+        this.cacheTtl = TTL_MAP[this.providerName] ?? CACHE_TTL_MS;
         this.log = makeLogger();
 
         if (typeof this.config.epgOffsetHours === 'string') {
@@ -175,6 +185,13 @@ class M3UEPGAddon {
             return;
         }
 
+        // If data was freshly loaded (e.g. by createAddon's initial updateData), skip re-fetch
+        const JUST_FETCHED_MS = 2 * 60 * 1000;
+        if (this.channels.length && this.lastUpdate && (Date.now() - this.lastUpdate < JUST_FETCHED_MS)) {
+            this.firstCatalogRefreshDone = true;
+            return;
+        }
+
         this.firstCatalogRefreshPromise = (async () => {
             if (CACHE_ENABLED) {
                 sqliteCache.del('addon:data:' + this.cacheKey);
@@ -237,19 +254,35 @@ class M3UEPGAddon {
         const item = this.channelMap.get(id);
         if (!item) return [];
 
+        const reqHeaders = {};
+        if (item.userAgent) reqHeaders['User-Agent'] = item.userAgent;
+        if (item.referrer)  reqHeaders['Referer']    = item.referrer;
+        const behaviorHints = Object.keys(reqHeaders).length
+            ? { notWebReady: true, proxyHeaders: { request: reqHeaders } }
+            : { notWebReady: true };
+
         if (item.urls && item.urls.length > 0) {
             return item.urls.map((url, index) => ({
-                url: url,
+                url,
                 title: item.urls.length > 1 ? `${item.name} - Link ${index + 1}` : `${item.name} - Live`,
-                behaviorHints: { notWebReady: true }
+                behaviorHints,
             }));
         }
 
-        return [{
-            url: item.url,
-            title: `${item.name} - Live`,
-            behaviorHints: { notWebReady: true }
-        }];
+        const streams = [{ url: item.url, title: `${item.name} - Live`, behaviorHints }];
+
+        // For Xtream Codes-style URLs (no file extension), also offer HLS variant.
+        // Pattern: http(s)://host/username/password/streamid  (no dot in the last path segment)
+        const xtreamRe = /^https?:\/\/[^/]+\/[^/]+\/[^/]+\/(\d+)$/;
+        if (xtreamRe.test(item.url)) {
+            streams.unshift({
+                url: item.url + '.m3u8',
+                title: `${item.name} - HLS`,
+                behaviorHints,
+            });
+        }
+
+        return streams;
     }
 
     getDetailedMeta(id) {

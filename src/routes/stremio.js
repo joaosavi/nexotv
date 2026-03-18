@@ -20,8 +20,12 @@ function maybeDecryptConfig(token) {
     return tryParseConfigToken(token);
 }
 
+// Static asset directory names that must never be treated as config tokens
+const STATIC_PREFIXES = new Set(['css', 'js', 'html', 'logo', 'images', 'fonts', 'assets']);
+
 function isConfigToken(token) {
     if (!token) return false;
+    if (STATIC_PREFIXES.has(token.toLowerCase())) return false;
     if (token.startsWith('enc:')) return true;
     if (token.length < 4) return false;
     return true;
@@ -84,7 +88,7 @@ router.get('/:token/manifest.json', tokenLimiter, (req, res) => {
         }
         iface._cleanManifest = m;
     }
-    const manifest = iface._cleanManifest;
+    const manifest = { ...iface._cleanManifest, logo: `${req.protocol}://${req.get('host')}/logo/favicon.svg` };
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

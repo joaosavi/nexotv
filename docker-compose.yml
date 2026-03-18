@@ -1,13 +1,19 @@
 version: '3.8'
 services:
-  iptv-addon:
+  nexotv:
     build: .
-    image: iptv-addon:latest
-    container_name: iptv-addon
+    image: nexotv:latest
+    container_name: nexotv
     ports:
       - "7000:7000"
     env_file:
       - .env
     volumes:
       - ./data:/app/data
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:7000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     restart: unless-stopped

@@ -8,9 +8,9 @@ module.exports = {
     MAX_CACHE_ENTRIES: parseInt(process.env.MAX_CACHE_ENTRIES || '300', 10),
     PREFETCH_ENABLED: (process.env.PREFETCH_ENABLED || 'true').toLowerCase() !== 'false',
     PREFETCH_MAX_BYTES: parseInt(process.env.PREFETCH_MAX_BYTES || '150000000', 10),
-    ADDON_NAME: process.env.ADDON_NAME || 'IPTV Stremio Addon',
+    ADDON_NAME: process.env.ADDON_NAME || 'NexoTV',
     ADDON_DESCRIPTION: process.env.ADDON_DESCRIPTION || 'Stream your IPTV channels in Stremio',
-    ADDON_LOGO_URL: process.env.ADDON_LOGO_URL || 'https://i.imgur.com/vN5tLuv.jpeg',
+    ADDON_LOGO_URL: process.env.ADDON_LOGO_URL || 'https://i.imgur.com/ercOjke.jpeg',
     LOGO_CACHE_ENABLED: (process.env.LOGO_CACHE_ENABLED || 'true').toLowerCase() !== 'false',
     CONFIG_SECRET: process.env.CONFIG_SECRET || null,
     IP_RATE_LIMIT_ENABLED: (process.env.IP_RATE_LIMIT_ENABLED || 'true').toLowerCase() !== 'false',
@@ -23,5 +23,6 @@ module.exports = {
     SQLITE_GC_INTERVAL_MS: parseInt(process.env.SQLITE_GC_INTERVAL_MS || '21600000', 10),
     SQLITE_VACUUM_INTERVAL_MS: parseInt(process.env.SQLITE_VACUUM_INTERVAL_MS || '604800000', 10),
     IPTV_ORG_CACHE_TTL_MS: parseInt(process.env.IPTV_ORG_CACHE_TTL_MS || '') || 21600000,
+    M3U_CACHE_TTL_MS: parseInt(process.env.M3U_CACHE_TTL_MS || '') || 21600000,
     ALLOW_LOCAL_URLS: (process.env.ALLOW_LOCAL_URLS || 'false').toLowerCase() === 'true',
 };
