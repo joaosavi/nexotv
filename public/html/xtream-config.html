@@ -25,7 +25,8 @@
                 </div>
                 <!-- Actual content, hidden until loaded -->
                 <div id="headerContent" class="header-content hidden">
-                    <img src="" id="addonLogo" class="addon-logo hidden-img" alt="Addon Logo">
+                    <img src="" id="addonLogo" class="addon-logo hidden-img" alt="Addon Logo"
+                        onerror="this.classList.add('hidden-img')">
                     <div class="header-text">
                         <h1 class="app-title" id="addonTitle"></h1>
                         <p class="subtitle" id="addonSubtitle"></p>

@@ -20,8 +20,12 @@ function maybeDecryptConfig(token) {
     return tryParseConfigToken(token);
 }
 
+// Static asset directory names that must never be treated as config tokens
+const STATIC_PREFIXES = new Set(['css', 'js', 'html', 'logo', 'images', 'fonts', 'assets']);
+
 function isConfigToken(token) {
     if (!token) return false;
+    if (STATIC_PREFIXES.has(token.toLowerCase())) return false;
     if (token.startsWith('enc:')) return true;
     if (token.length < 4) return false;
     return true;

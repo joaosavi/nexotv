@@ -10,7 +10,7 @@ module.exports = {
     PREFETCH_MAX_BYTES: parseInt(process.env.PREFETCH_MAX_BYTES || '150000000', 10),
     ADDON_NAME: process.env.ADDON_NAME || 'NexoTV',
     ADDON_DESCRIPTION: process.env.ADDON_DESCRIPTION || 'Stream your IPTV channels in Stremio',
-    ADDON_LOGO_URL: process.env.ADDON_LOGO_URL || 'https://i.imgur.com/vN5tLuv.jpeg',
+    ADDON_LOGO_URL: process.env.ADDON_LOGO_URL || 'https://i.imgur.com/ercOjke.jpeg',
     LOGO_CACHE_ENABLED: (process.env.LOGO_CACHE_ENABLED || 'true').toLowerCase() !== 'false',
     CONFIG_SECRET: process.env.CONFIG_SECRET || null,
     IP_RATE_LIMIT_ENABLED: (process.env.IP_RATE_LIMIT_ENABLED || 'true').toLowerCase() !== 'false',
