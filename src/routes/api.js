@@ -1,5 +1,7 @@
 const { Router } = require('express');
 const dns = require('dns').promises;
+const fs = require('fs');
+const path = require('path');
 const env = require('../config/env');
 const { encryptConfig } = require('../utils/cryptoConfig');
 const { makeLogger } = require('../utils/logger');
@@ -38,6 +40,19 @@ router.get('/api/addon-info', (req, res) => {
 
 router.get('/api/capabilities', (req, res) => {
     res.json({ encryptionEnabled: !!env.CONFIG_SECRET });
+});
+
+const PUBLIC_PLAYLISTS_PATH = path.join(__dirname, '../../config/public-playlists.json');
+
+router.get('/api/public-playlists', (req, res) => {
+    try {
+        const raw = fs.readFileSync(PUBLIC_PLAYLISTS_PATH, 'utf8');
+        const playlists = JSON.parse(raw);
+        if (!Array.isArray(playlists)) return res.json([]);
+        res.json(playlists);
+    } catch {
+        res.json([]);
+    }
 });
 
 /**
