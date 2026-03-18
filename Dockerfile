@@ -4,8 +4,8 @@ WORKDIR /app
 
 RUN apk add --no-cache python3 build-base
 
-COPY package.json package-lock.json ./
-RUN npm ci --production
+COPY package.json ./
+RUN npm install --production
 
 RUN apk del python3 build-base
 
