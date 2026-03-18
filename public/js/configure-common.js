@@ -79,8 +79,8 @@
     }
 
     function progressMessage(elapsed) {
-        if (elapsed < 4000) return 'Contacting Xtream panel…';
-        if (elapsed < 10000) return 'Loading live channels…';
+        if (elapsed < 4000) return 'Contacting provider…';
+        if (elapsed < 10000) return 'Loading channels…';
         if (elapsed < 18000) return 'Organizing categories…';
         if (elapsed < 26000) return 'Fetching EPG (if enabled)…';
         if (elapsed < 35000) return 'Parsing EPG data…';
@@ -249,7 +249,8 @@
         if (!decoded) return;
         if (decoded.provider !== provider && !(provider === 'xtream' && !decoded.provider)) return;
 
-        const tabId = provider === 'xtream' ? 'panel-xtream' : 'panel-iptv-org';
+        const tabIdMap = { 'xtream': 'panel-xtream', 'iptv-org': 'panel-iptv-org', 'm3u': 'panel-m3u' };
+        const tabId = tabIdMap[provider] || 'panel-xtream';
         const tabBtns = document.querySelectorAll('.tab-btn[role="tab"]');
         const tabPanels = document.querySelectorAll('.tab-panel[role="tabpanel"]');
         tabBtns.forEach(btn => {
@@ -286,6 +287,33 @@
             }
             trySet('epgOffsetHours', decoded.epgOffsetHours);
             const reformatLogos = document.getElementById('reformatLogos');
+            if (reformatLogos) reformatLogos.checked = !!decoded.reformatLogos;
+        }
+
+        if (provider === 'm3u') {
+            const trySet = (id, val) => {
+                const el = document.getElementById(id);
+                if (el && val !== undefined && val !== null) el.value = val;
+            };
+            trySet('m3uUrl', decoded.m3uUrl);
+            const enableEpg = document.getElementById('m3uEnableEpg');
+            if (enableEpg) {
+                enableEpg.checked = !!decoded.enableEpg;
+                // Manually sync visibility — programmatic .checked doesn't fire 'change'
+                const epgOptions = document.getElementById('m3uEpgOptions');
+                if (epgOptions) epgOptions.classList.toggle('hidden', !decoded.enableEpg);
+            }
+            if (decoded.epgUrl) {
+                const custom = document.querySelector('input[name="m3uEpgMode"][value="custom"]');
+                if (custom) {
+                    custom.checked = true;
+                    const customGroup = document.getElementById('m3uCustomEpgGroup');
+                    if (customGroup) customGroup.classList.remove('hidden');
+                }
+                trySet('m3uCustomEpgUrl', decoded.epgUrl);
+            }
+            trySet('m3uEpgOffsetHours', decoded.epgOffsetHours ?? 0);
+            const reformatLogos = document.getElementById('m3uReformatLogos');
             if (reformatLogos) reformatLogos.checked = !!decoded.reformatLogos;
         }
     }

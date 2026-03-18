@@ -14,7 +14,7 @@ const { globalIpLimiter } = require('./src/middleware/rateLimiter');
 app.use(globalIpLimiter);
 
 app.use((req, res, next) => {
-    res.setHeader('X-App', 'IPTV-Stremio-Addon');
+    res.setHeader('X-App', 'NexoTV');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Headers', '*');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 });
 
 app.get('/health', (req, res) => res.json({ status: 'OK', timestamp: new Date().toISOString() }));
-app.get('/favicon.ico', (req, res) => res.status(204).end());
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(__dirname, 'public', 'logo', 'addon-logo.png')));
 
 app.use(require('./src/routes/api'));
 app.use(require('./src/routes/pages'));

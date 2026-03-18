@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - dev
     tags:
       - "v*.*.*"
 
@@ -21,7 +20,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ${{ secrets.DOCKERHUB_USERNAME }}/iptv-stremio-addon
+          images: ${{ secrets.DOCKERHUB_USERNAME }}/nexotv
           tags: |
             type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
             type=raw,value=dev,enable=${{ github.ref == 'refs/heads/dev' }}
@@ -64,4 +63,3 @@ jobs:
         run: |
           rm -rf /tmp/.buildx-cache
           mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-

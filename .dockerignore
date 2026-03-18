@@ -2,6 +2,7 @@
 node_modules/
 npm-debug.log*
 
+
 # Git
 .git
 .gitignore
@@ -27,6 +28,7 @@ tmp/
 data/
 .dev/
 beamup.json
+docs/
 
 # Editor / IDE
 .vscode/
