@@ -83,7 +83,7 @@ class M3UEPGAddon {
         if (Math.abs(this.config.epgOffsetHours) > 48)
             this.config.epgOffsetHours = 0;
 
-        if (this.providerName === 'iptv-org') {
+        if (this.providerName === 'iptv-org' || this.providerName === 'm3u') {
             this.config.reformatLogos = true;
         }
 
@@ -213,7 +213,7 @@ class M3UEPGAddon {
 
     deriveFallbackLogoUrl(item) {
         let finalUrl;
-        const logoAttr = item.attributes?.['tvg-logo'];
+        const logoAttr = item.attributes?.['tvg-logo'] || item.logo;
         if (logoAttr && logoAttr.trim()) {
             finalUrl = logoAttr;
         } else {
