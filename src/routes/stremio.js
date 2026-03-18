@@ -84,11 +84,14 @@ router.get('/:token/manifest.json', tokenLimiter, (req, res) => {
         const m = JSON.parse(JSON.stringify(iface.manifest));
         if (m.behaviorHints) {
             delete m.behaviorHints.configurationRequired;
-            delete m.behaviorHints.configurable;
         }
         iface._cleanManifest = m;
     }
-    const manifest = iface._cleanManifest;
+    const manifest = JSON.parse(JSON.stringify(iface._cleanManifest));
+    const baseUrl = `${req.protocol}://${req.get('host')}`;
+    if (manifest.behaviorHints) {
+        manifest.behaviorHints.configureUrl = `${baseUrl}/${req.configToken}/configure`;
+    }
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
