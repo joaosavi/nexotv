@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════
    Fonts
 ═══════════════════════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Fira+Code:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap');
 
 /* ═══════════════════════════════════════════════════════════
    Variables
@@ -29,9 +29,9 @@
     --text-2:        #7a90ae;
     --text-3:        #3a4f6a;
 
-    --font:          'DM Sans', system-ui, sans-serif;
-    --font-display:  'Syne', system-ui, sans-serif;
-    --mono:          'Fira Code', monospace;
+    --font:          'Geist', system-ui, sans-serif;
+    --font-display:  'Geist', system-ui, sans-serif;
+    --mono:          'Geist Mono', monospace;
 
     --r-xs:  6px;
     --r-sm:  10px;
