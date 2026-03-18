@@ -88,7 +88,7 @@ router.get('/:token/manifest.json', tokenLimiter, (req, res) => {
         }
         iface._cleanManifest = m;
     }
-    const manifest = iface._cleanManifest;
+    const manifest = { ...iface._cleanManifest, logo: `${req.protocol}://${req.get('host')}/logo/favicon.svg` };
     res.setHeader('Content-Type', 'application/json; charset=utf-8');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
