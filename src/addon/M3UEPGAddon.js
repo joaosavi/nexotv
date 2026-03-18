@@ -4,6 +4,7 @@ const sqliteCache = require('../utils/sqliteCache');
 const { makeLogger } = require('../utils/logger');
 const { parseEPG, getCurrentProgram, getUpcomingPrograms } = require('../parsers/epgParser');
 const env = require('../config/env');
+const { PROVIDER_FILE_MAP, UPDATE_INTERVAL_MS } = require('../config/constants');
 
 const CACHE_ENABLED = env.CACHE_ENABLED;
 const CACHE_TTL_MS = env.CACHE_TTL_MS;
@@ -19,11 +20,6 @@ function stableStringify(obj) {
     return JSON.stringify(obj, Object.keys(obj).sort());
 }
 
-const PROVIDER_FILE_MAP = {
-    'xtream': 'xtreamProvider',
-    'iptv-org': 'iptvOrgProvider',
-    'm3u': 'm3uProvider'
-};
 
 function createCacheKey(config) {
     const provider = config.provider || 'xtream';
@@ -64,7 +60,7 @@ class M3UEPGAddon {
         this.manifestRef = manifestRef;
         this.cacheKey = createCacheKey(config);
         this.idPrefix = this.cacheKey.slice(0, 8);
-        this.updateInterval = 3600000;
+        this.updateInterval = UPDATE_INTERVAL_MS;
         this.channels = [];
         this.channelMap = new Map();
         this.epgData = {};
