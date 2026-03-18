@@ -65,6 +65,8 @@ class M3UEPGAddon {
         this.channelMap = new Map();
         this.epgData = {};
         this.lastUpdate = 0;
+        this._evictTimer = null;
+        this._loadPromise = null;
         this.firstCatalogRefreshDone = false;
         this.firstCatalogRefreshPromise = null;
         const TTL_MAP = {
@@ -187,7 +189,7 @@ class M3UEPGAddon {
 
         // If data was freshly loaded (e.g. by createAddon's initial updateData), skip re-fetch
         const JUST_FETCHED_MS = 2 * 60 * 1000;
-        if (this.channels.length && this.lastUpdate && (Date.now() - this.lastUpdate < JUST_FETCHED_MS)) {
+        if (this.lastUpdate && (Date.now() - this.lastUpdate < JUST_FETCHED_MS)) {
             this.firstCatalogRefreshDone = true;
             return;
         }
@@ -250,7 +252,8 @@ class M3UEPGAddon {
         };
     }
 
-    getStreams(id) {
+    async getStreams(id) {
+        await this.ensureDataLoaded();
         const item = this.channelMap.get(id);
         if (!item) return [];
 
@@ -285,7 +288,8 @@ class M3UEPGAddon {
         return streams;
     }
 
-    getDetailedMeta(id) {
+    async getDetailedMeta(id) {
+        await this.ensureDataLoaded();
         const item = this.channelMap.get(id);
         if (!item) return null;
         const epgId = item.attributes?.['tvg-id'] || item.attributes?.['tvg-name'];
@@ -318,6 +322,39 @@ class M3UEPGAddon {
                 : (item.attributes?.['group-title'] ? [item.attributes['group-title']] : ['Live TV']),
             runtime: 'Live'
         };
+    }
+
+    _resetEvictTimer() {
+        clearTimeout(this._evictTimer);
+        this._evictTimer = setTimeout(() => this._evictFromMemory(), env.DATA_MEMORY_TTL_MS);
+    }
+
+    _evictFromMemory() {
+        this.channels = [];
+        this.channelMap = new Map();
+        this.epgData = {};
+        this._evictTimer = null;
+        this.log.debug('Data evicted from RAM', { cacheKey: this.cacheKey });
+    }
+
+    async ensureDataLoaded() {
+        if (this.channels.length > 0) {
+            this._resetEvictTimer();
+            return;
+        }
+        if (!CACHE_ENABLED) return;
+        if (this._loadPromise) {
+            await this._loadPromise;
+            return;
+        }
+        this._loadPromise = this.loadFromCache().finally(() => { this._loadPromise = null; });
+        await this._loadPromise;
+        this._resetEvictTimer();
+    }
+
+    async getChannelsForCatalog() {
+        await this.ensureDataLoaded();
+        return this.channels;
     }
 }
 
