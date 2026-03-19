@@ -15,6 +15,7 @@
           class="addon-logo"
           alt="Addon Logo"
           @error="(e) => (e.target as HTMLImageElement).style.display = 'none'"
+          style="border-radius: 22%"
         >
         <div class="header-text">
           <h1 class="app-title">{{ info?.name }}</h1>

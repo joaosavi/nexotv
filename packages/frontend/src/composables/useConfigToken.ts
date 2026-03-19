@@ -34,8 +34,7 @@ export function useConfigToken(appendDetail: (line: string) => void) {
       ? `${window.location.protocol}//${window.location.hostname}:7000`
       : window.location.origin
     const manifestUrl = `${backendOrigin}/${token}/manifest.json`
-    const hostPart = backendOrigin.replace(/^https?:\/\//, '')
-    const stremioUrl = `stremio://${hostPart}/${token}/manifest.json`
+    const stremioUrl = manifestUrl.replace(/^https?:\/\//, 'stremio://')
     return { token, manifestUrl, stremioUrl }
   }
 
