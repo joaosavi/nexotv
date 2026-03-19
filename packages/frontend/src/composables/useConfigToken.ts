@@ -28,9 +28,13 @@ export function useConfigToken(appendDetail: (line: string) => void) {
       token = encodeConfigBase64Url(config)
     }
 
-    const origin = window.location.origin
-    const manifestUrl = `${origin}/${token}/manifest.json`
-    const hostPart = origin.replace(/^https?:\/\//, '')
+    // In dev mode the frontend runs on a different port (5173) from the backend (7000).
+    // Manifest and Stremio URLs must point to the backend, not the Vite dev server.
+    const backendOrigin = import.meta.env.DEV
+      ? `${window.location.protocol}//${window.location.hostname}:7000`
+      : window.location.origin
+    const manifestUrl = `${backendOrigin}/${token}/manifest.json`
+    const hostPart = backendOrigin.replace(/^https?:\/\//, '')
     const stremioUrl = `stremio://${hostPart}/${token}/manifest.json`
     return { token, manifestUrl, stremioUrl }
   }
