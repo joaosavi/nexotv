@@ -24,7 +24,7 @@ app.use((req, res, next) => {
 });
 
 app.get('/health', (req, res) => res.json({ status: 'OK', timestamp: new Date().toISOString() }));
-app.get('/favicon.ico', (req, res) => res.sendFile(path.join(__dirname, 'public', 'logo', 'addon-logo.png')));
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(__dirname, 'public', 'assets', 'logo.png')));
 
 app.use(require('./src/routes/api'));
 app.use(require('./src/routes/pages'));
