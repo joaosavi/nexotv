@@ -4,7 +4,11 @@ import { createManifest } from '../addon/manifest';
 
 const router = Router();
 
-const publicDir = path.join(__dirname, '..', '..', 'public');
+// Resolve correctly in both dev (src/routes) and prod (dist/src/routes)
+const isDist = __dirname.split(path.sep).includes('dist');
+const publicDir = isDist
+    ? path.join(__dirname, '..', '..', '..', 'public')
+    : path.join(__dirname, '..', '..', 'public');
 
 router.get('/', (req, res) => {
     res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));

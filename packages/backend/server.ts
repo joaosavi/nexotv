@@ -9,7 +9,9 @@ import stremioRouter from './src/routes/stremio';
 import * as sqliteCache from './src/utils/sqliteCache';
 
 const app = express();
-const staticDir = path.join(__dirname, 'public');
+// Resolve public dir correctly in both dev (tsx) and prod (node dist/server.js)
+const BACKEND_ROOT = path.basename(__dirname) === 'dist' ? path.join(__dirname, '..') : __dirname;
+const staticDir = path.join(BACKEND_ROOT, 'public');
 
 app.set('trust proxy', 1);
 app.use(express.static(staticDir));
@@ -28,7 +30,7 @@ app.use((req, res, next) => {
 });
 
 app.get('/health', (req, res) => res.json({ status: 'OK', timestamp: new Date().toISOString() }));
-app.get('/favicon.ico', (req, res) => res.sendFile(path.join(__dirname, 'public', 'assets', 'logo.png')));
+app.get('/favicon.ico', (req, res) => res.sendFile(path.join(BACKEND_ROOT, 'public', 'assets', 'logo.png')));
 
 app.use(apiRouter);
 app.use(pagesRouter);
