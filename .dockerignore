@@ -1,11 +1,8 @@
 # Dependencies
 node_modules/
-packages/*/dist
-packages/frontend/node_modules
+packages/*/node_modules/
+packages/*/dist/
 npm-debug.log*
-packages/*/dist
-packages/frontend/node_modules
-
 
 # Git
 .git

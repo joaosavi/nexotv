@@ -1,5 +1,3 @@
-'use strict';
-
 import { Router } from 'express';
 import fs from 'fs';
 import path from 'path';
@@ -37,7 +35,11 @@ router.get('/api/capabilities', (req, res) => {
     res.json({ encryptionEnabled: !!env.CONFIG_SECRET });
 });
 
-const PUBLIC_PLAYLISTS_PATH = path.join(__dirname, '..', '..', '..', '..', 'config', 'public-playlists.json');
+// Resolve correctly in both dev (src/routes) and prod (dist/src/routes)
+const isDist = __dirname.split(path.sep).includes('dist');
+const PUBLIC_PLAYLISTS_PATH = isDist
+    ? path.join(__dirname, '..', '..', '..', '..', '..', 'config', 'public-playlists.json')
+    : path.join(__dirname, '..', '..', '..', '..', 'config', 'public-playlists.json');
 
 router.get('/api/public-playlists', (req, res) => {
     try {
