@@ -11,11 +11,11 @@
       <pre class="status-log" ref="logRef">{{ details }}</pre>
       <div class="overlay-actions">
         <template v-if="isReady">
-          <button v-if="manifestUrl" class="btn success" @click="openStremio">Open in Stremio</button>
-          <button v-if="manifestUrl" class="btn secondary" @click="copyManifest">{{ copyLabel }}</button>
-          <button class="btn ghost" @click="$emit('close')">Close</button>
+          <button v-if="manifestUrl" class="btn primary" @click="openStremio">Open in Stremio</button>
+          <button v-if="manifestUrl" class="btn" @click="copyManifest">{{ copyLabel }}</button>
         </template>
       </div>
+      <button v-if="isReady" class="btn" style="margin-top: 14px" @click="$emit('close')">Close</button>
     </div>
   </div>
 </template>
