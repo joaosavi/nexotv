@@ -10,7 +10,8 @@ let db: Database.Database | null = null;
 export function init(dbPath: string | null) {
     if (db) return db;
 
-    const resolvedPath = dbPath || path.resolve(process.cwd(), 'data', 'cache.sqlite');
+    const { repoRoot } = require('../config/env');
+    const resolvedPath = dbPath || path.resolve(repoRoot, 'data', 'cache.sqlite');
     const dir = path.dirname(resolvedPath);
 
     const fs = require('fs');

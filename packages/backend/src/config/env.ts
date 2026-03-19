@@ -1,5 +1,20 @@
 import dotenv from 'dotenv';
-dotenv.config();
+import path from 'path';
+import fs from 'fs';
+
+// Walk up from __dirname until we find pnpm-workspace.yaml (monorepo root).
+// Works for both tsx (src/config/) and compiled (dist/src/config/) contexts.
+function findRepoRoot(startDir: string): string {
+    let dir = startDir;
+    while (true) {
+        if (fs.existsSync(path.join(dir, 'pnpm-workspace.yaml'))) return dir;
+        const parent = path.dirname(dir);
+        if (parent === dir) return startDir; // filesystem root — fallback
+        dir = parent;
+    }
+}
+const repoRoot = findRepoRoot(__dirname);
+dotenv.config({ path: path.join(repoRoot, '.env') });
 
 const env = {
     PORT: parseInt(process.env.PORT || '7000', 10),
@@ -30,4 +45,5 @@ const env = {
     DATA_MEMORY_TTL_MS: parseInt(process.env.DATA_MEMORY_TTL_MS || '300000', 10),
 };
 
+export { repoRoot };
 export default env;
