@@ -19,10 +19,20 @@ export function init(dbPath: string | null) {
         fs.mkdirSync(dir, { recursive: true });
     }
 
-    db = new Database(resolvedPath);
-
-    db.pragma('journal_mode = WAL');
-    db.pragma('synchronous = NORMAL');
+    try {
+        db = new Database(resolvedPath);
+        db.pragma('journal_mode = WAL');
+        db.pragma('synchronous = NORMAL');
+    } catch {
+        // SQLite fails on Windows bind mounts in Docker (SQLITE_IOERR_SHMOPEN).
+        // Fall back to in-memory cache — safe since this is pure cache (no primary data).
+        log.warn('SQLite persistent cache unavailable (filesystem limitation), using in-memory cache — data will not survive restarts');
+        try { db?.close(); } catch {}
+        for (const ext of ['', '-shm', '-wal']) {
+            try { fs.unlinkSync(resolvedPath + ext); } catch {}
+        }
+        db = new Database(':memory:');
+    }
 
     db.exec(`
         CREATE TABLE IF NOT EXISTS CacheEntry (
