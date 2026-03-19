@@ -149,10 +149,10 @@ Browser (Config UI)
 POST /api/prefetch  ← SSRF-guarded (hostname + DNS check)
     │ config JSON → token (base64url or enc:)
     ▼
-server.js  → decrypt token → createAddon(config) → SQLite cache
+packages/backend/server.ts  → decrypt token → createAddon(config) → SQLite cache
     │
     ▼
-src/addon/builder.js  (M3UEPGAddon)
+packages/backend/src/addon/builder.ts  (M3UEPGAddon)
     ├── xtreamProvider   → Xtream Codes API
     ├── iptvOrgProvider  → iptv-org JSON API
     └── m3uProvider      → M3U/M3U+ playlist + EPG
