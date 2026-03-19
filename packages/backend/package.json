@@ -2,10 +2,12 @@
   "name": "@nexotv/backend",
   "version": "2.0.0",
   "private": true,
-  "main": "server.js",
+  "main": "dist/server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
+    "start": "node dist/server.js",
+    "dev": "tsx watch server.ts",
+    "build": "tsc",
+    "build:check": "tsc --noEmit"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
@@ -17,6 +19,12 @@
     "xml2js": "^0.4.23"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "@types/better-sqlite3": "^7.6.0",
+    "@types/compression": "^1.7.5",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.0.0",
+    "@types/xml2js": "^0.4.14",
+    "tsx": "^4.19.0",
+    "typescript": "^5.4.0"
   }
 }
