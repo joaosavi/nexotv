@@ -32,6 +32,10 @@ yarn-error.log*
 # Test coverage
 coverage/
 
+# Monorepo build artifacts
+packages/*/dist/
+packages/*/node_modules/
+
 # Project specific
 .agent/
 .claude/
