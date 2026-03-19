@@ -77,6 +77,34 @@ function set(key, value, ttlMs) {
     log.debug('Cache set', { key, bytes: compressed.length, expiresAt });
 }
 
+function setRaw(key, value, ttlMs) {
+    if (!db) return;
+    const raw = Buffer.from(JSON.stringify(value));
+    const expiresAt = ttlMs ? Date.now() + ttlMs : null;
+    db.prepare(
+        'INSERT OR REPLACE INTO CacheEntry (key, value, expires_at) VALUES (?, ?, ?)'
+    ).run(key, raw, expiresAt);
+    log.debug('Cache setRaw', { key, bytes: raw.length, expiresAt });
+}
+
+function getRaw(key) {
+    if (!db) return null;
+    const stmt = db.prepare('SELECT value, expires_at FROM CacheEntry WHERE key = ?');
+    const row = stmt.get(key);
+    if (!row) return null;
+    if (row.expires_at && row.expires_at < Date.now()) {
+        db.prepare('DELETE FROM CacheEntry WHERE key = ?').run(key);
+        log.debug('Cache expired, deleted', { key });
+        return null;
+    }
+    try {
+        return JSON.parse(row.value.toString());
+    } catch (e) {
+        log.error('Cache getRaw parse error', { key, error: e.message });
+        return null;
+    }
+}
+
 function del(key) {
     if (!db) return;
     db.prepare('DELETE FROM CacheEntry WHERE key = ?').run(key);
@@ -105,4 +133,4 @@ function close() {
     }
 }
 
-module.exports = { init, get, set, del, cleanExpired, vacuum, close };
+module.exports = { init, get, set, getRaw, setRaw, del, cleanExpired, vacuum, close };

@@ -26,7 +26,7 @@ async function createAddon(config) {
     const buildPromise = (async () => {
         const builder = new addonBuilder(manifest);
         const addonInstance = new M3UEPGAddon(config, manifest);
-        await addonInstance.loadFromCache();
+        await addonInstance.loadChannelsFromCache();
         try {
             if (!addonInstance.lastUpdate || (Date.now() - addonInstance.lastUpdate > addonInstance.updateInterval)) {
                 await addonInstance.updateData(true);
@@ -35,6 +35,7 @@ async function createAddon(config) {
             console.error('[ADDON] Initial update failed:', e.message);
         }
         addonInstance.buildGenresInManifest();
+        if (CACHE_ENABLED) addonInstance._evictFromMemory();
 
         let iface;
         const _origBuildGenres = addonInstance.buildGenresInManifest.bind(addonInstance);
@@ -49,7 +50,8 @@ async function createAddon(config) {
                 await addonInstance.refreshOnFirstCatalogRequest();
                 addonInstance.updateData().catch(() => { });
                 const catalogIds = ['iptv_channels', 'iptv_org'];
-                let items = args.type === 'tv' && catalogIds.includes(args.id) ? addonInstance.channels : [];
+                const channels = await addonInstance.getChannelsForCatalog();
+                let items = args.type === 'tv' && catalogIds.includes(args.id) ? channels : [];
                 const extra = args.extra || {};
                 if (extra.genre && extra.genre !== 'All Channels') {
                     items = items.filter(i =>
@@ -82,7 +84,7 @@ async function createAddon(config) {
 
         builder.defineStreamHandler(async ({ type, id }) => {
             try {
-                const streams = addonInstance.getStreams(id);
+                const streams = await addonInstance.getStreams(id);
                 if (!streams || streams.length === 0) return { streams: [] };
                 if (env.DEBUG) {
                     console.log('[DEBUG] Stream request', { id, count: streams.length });
@@ -96,7 +98,7 @@ async function createAddon(config) {
 
         builder.defineMetaHandler(async ({ type, id }) => {
             try {
-                const meta = addonInstance.getDetailedMeta(id);
+                const meta = await addonInstance.getDetailedMeta(id);
                 if (env.DEBUG) {
                     console.log('[DEBUG] Meta request', { id, type });
                 }

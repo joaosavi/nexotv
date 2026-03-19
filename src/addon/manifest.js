@@ -27,6 +27,7 @@ function createManifest(idPrefix) {
             configurationRequired: true
         },
         ...(env.ADDON_LOGO_URL ? { logo: env.ADDON_LOGO_URL } : {}),
+        ...(env.ADDON_BACKGROUND_URL ? { background: env.ADDON_BACKGROUND_URL } : {}),
     };
 }
 

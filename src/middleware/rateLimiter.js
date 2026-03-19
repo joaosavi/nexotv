@@ -22,7 +22,7 @@ const tokenLimiter = rateLimit({
     windowMs: env.TOKEN_RATE_LIMIT_WINDOW_MS,
     max: env.TOKEN_RATE_LIMIT_MAX,
     keyGenerator: (req) => {
-        return req.configToken || req.ip || 'unknown';
+        return (req.ip || 'unknown') + ':' + (req.configToken || 'notoken');
     },
     message: { error: 'Too many addon requests with your token, please slow down.' },
     standardHeaders: true,

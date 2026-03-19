@@ -12,7 +12,7 @@
 - **EPG Support:** XMLTV from Xtream panel, embedded playlist header (`url-tvg`/`x-tvg-url`), or a custom XMLTV URL — pruned and optimized for low memory usage
 - **Filtering & Search:** Category browsing, full-text search, and multi-select Country/Category filtering for IPTV-org (OR within category, AND across categories)
 - **Encrypted Tokens:** Base64URL (plain) or AES-256-GCM (with `CONFIG_SECRET`)
-- **Persistent Cache:** SQLite with gzip compression, configurable TTL, and automatic garbage collection
+- **Persistent Cache:** SQLite with split channels/EPG entries (channels uncompressed, EPG gzip), configurable TTL, and automatic garbage collection; channel/EPG data evicted from RAM after idle timeout and reloaded on demand
 - **Logo Proxy:** Multi-source fallback, optional per-user resize, and optional caching
 - **SSRF Protection:** Server-side CORS bypass proxy with hostname + DNS validation
 - **Rate Limiting:** Global IP-based and per-token limits to prevent abuse
@@ -78,7 +78,8 @@ docker compose up -d
 | `CACHE_TTL_MS` | `21600000` | Xtream cache TTL in ms (default 6h) |
 | `IPTV_ORG_CACHE_TTL_MS` | `21600000` | IPTV-org cache TTL in ms |
 | `M3U_CACHE_TTL_MS` | `21600000` | M3U/M3U+ cache TTL in ms |
-| `MAX_CACHE_ENTRIES` | `300` | Max in-memory LRU cache entries |
+| `DATA_MEMORY_TTL_MS` | `300000` | How long channel/EPG data stays in RAM after last use (5m) |
+| `MAX_CACHE_ENTRIES` | `300` | Max in-memory addon instances (lightweight, data loaded on demand) |
 | `SQLITE_PATH` | `./data/cache.sqlite` | SQLite database path |
 | `SQLITE_GC_INTERVAL_MS` | `21600000` | How often to purge expired cache entries (6h) |
 | `SQLITE_VACUUM_INTERVAL_MS` | `604800000` | How often to run VACUUM (7d) |
@@ -151,9 +152,9 @@ Stremio Client  (catalog / stream / meta)
 
 | Layer | Contents |
 |-------|----------|
-| SQLite (persistent) | Channels + EPG per config — gzip BLOBs with TTL |
-| Build promise cache | Deduplicates concurrent `createAddon()` calls |
-| Interface LRU cache | Caches Stremio SDK interface objects per token |
+| SQLite (persistent) | Two entries per config: `addon:channels:{key}` (raw JSON) and `addon:epg:{key}` (gzip); TTL-based expiry |
+| Build promise cache (LRU) | Deduplicates concurrent `createAddon()` calls; instances are lightweight (no channel data in RAM) |
+| Data memory TTL | Channel/EPG loaded on demand, evicted from RAM after `DATA_MEMORY_TTL_MS` idle (default 5 min) |
 
 ---
 
