@@ -7,7 +7,7 @@ const router = Router();
 
 // __dirname in compiled output = packages/backend/dist/src/routes/
 // path to frontend dist: packages/frontend/dist/
-const frontendDist = path.join(__dirname, '..', '..', '..', 'frontend', 'dist');
+const frontendDist = path.join(__dirname, '..', '..', '..', '..', 'frontend', 'dist');
 const indexHtml = path.join(frontendDist, 'index.html');
 
 function sendIndex(res: any) {
