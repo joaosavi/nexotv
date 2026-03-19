@@ -25,9 +25,22 @@
 git clone https://github.com/joaosavi/nexotv.git
 cd nexotv
 cp .env.example .env
-npm install
-npm start
+pnpm install
+pnpm --filter backend dev
 # Open http://localhost:7000/configure
+```
+
+### Dev Workflow (full-stack)
+
+```bash
+# Backend only (port 7000, tsx watch)
+pnpm --filter backend dev
+
+# Frontend only (port 5173, Vite dev server — proxies /api and /encrypt to port 7000)
+pnpm --filter frontend dev
+
+# Both concurrently
+pnpm dev
 ```
 
 ---

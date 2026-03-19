@@ -1,25 +1,33 @@
 import { Router } from 'express';
 import path from 'path';
+import fs from 'fs';
 import { createManifest } from '../addon/manifest';
 
 const router = Router();
 
-// Resolve correctly in both dev (src/routes) and prod (dist/src/routes)
-const isDist = __dirname.split(path.sep).includes('dist');
-const publicDir = isDist
-    ? path.join(__dirname, '..', '..', '..', 'public')
-    : path.join(__dirname, '..', '..', 'public');
+// __dirname in compiled output = packages/backend/dist/src/routes/
+// path to frontend dist: packages/frontend/dist/
+const frontendDist = path.join(__dirname, '..', '..', '..', 'frontend', 'dist');
+const indexHtml = path.join(frontendDist, 'index.html');
+
+function sendIndex(res: any) {
+    if (fs.existsSync(indexHtml)) {
+        res.sendFile(indexHtml);
+    } else {
+        res.status(503).send('Frontend not built. Run: pnpm --filter frontend build');
+    }
+}
 
 router.get('/', (req, res) => {
-    res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));
+    sendIndex(res);
 });
 
 router.get('/configure', (req, res) => {
-    res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));
+    sendIndex(res);
 });
 
 router.get('/configure-iptv-org', (req, res) => {
-    res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));
+    sendIndex(res);
 });
 
 router.get('/configure-xtream', (req, res) => {
@@ -27,7 +35,7 @@ router.get('/configure-xtream', (req, res) => {
 });
 
 router.get('/:token/configure', (req, res) => {
-    res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));
+    sendIndex(res);
 });
 
 router.get('/:token/configure-xtream', (req, res) => {
@@ -35,7 +43,7 @@ router.get('/:token/configure-xtream', (req, res) => {
 });
 
 router.get('/:token/configure-iptv-org', (req, res) => {
-    res.sendFile(path.join(publicDir, 'html', 'xtream-config.html'));
+    sendIndex(res);
 });
 
 router.get('/manifest.json', (req, res) => {
