@@ -41,5 +41,9 @@ CLAUDE.md
 beamup.json
 docs/
 
+# Monorepo packages
+packages/*/node_modules
+packages/*/dist
+
 # Stremio specific
 .well-known/
