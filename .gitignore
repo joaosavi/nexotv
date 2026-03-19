@@ -4,6 +4,8 @@
 
 # Dependencies
 node_modules/
+packages/*/node_modules
+packages/*/dist
 
 # IDEs and Editors
 .vscode/
