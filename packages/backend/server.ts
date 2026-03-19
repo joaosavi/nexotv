@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import compression from 'compression';
 import env from './src/config/env';
 import { globalIpLimiter } from './src/middleware/rateLimiter';
@@ -9,12 +10,15 @@ import stremioRouter from './src/routes/stremio';
 import * as sqliteCache from './src/utils/sqliteCache';
 
 const app = express();
-// Resolve public dir correctly in both dev (tsx) and prod (node dist/server.js)
-const BACKEND_ROOT = path.basename(__dirname) === 'dist' ? path.join(__dirname, '..') : __dirname;
-const staticDir = path.join(BACKEND_ROOT, 'public');
+// __dirname in compiled output = packages/backend/dist/
+// path to frontend dist: packages/frontend/dist/
+const frontendDist = path.join(__dirname, '..', '..', 'frontend', 'dist');
 
 app.set('trust proxy', 1);
-app.use(express.static(staticDir));
+if (fs.existsSync(frontendDist)) {
+    app.use(express.static(frontendDist));
+    console.log(`[STATIC] Serving frontend from ${frontendDist}`);
+}
 app.use(express.json({ limit: '512kb' }));
 app.use(compression());
 app.use(globalIpLimiter);
@@ -30,7 +34,13 @@ app.use((req, res, next) => {
 });
 
 app.get('/health', (req, res) => res.json({ status: 'OK', timestamp: new Date().toISOString() }));
-app.get('/favicon.ico', (req, res) => res.sendFile(path.join(BACKEND_ROOT, 'public', 'assets', 'logo.png')));
+app.get('/favicon.ico', (req, res) => {
+    if (fs.existsSync(frontendDist)) {
+        res.sendFile(path.join(frontendDist, 'logo', 'addon-logo.png'));
+    } else {
+        res.status(404).end();
+    }
+});
 
 app.use(apiRouter);
 app.use(pagesRouter);

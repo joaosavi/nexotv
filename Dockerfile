@@ -2,21 +2,31 @@ FROM node:18-alpine
 
 WORKDIR /app
 
+# Build tools for native modules (better-sqlite3)
 RUN apk add --no-cache python3 build-base
+
+# Install pnpm
 RUN npm install -g pnpm@latest
 
-# Install backend deps — ALL deps (devDeps needed for tsc compilation)
+# Install ALL workspace deps (backend native modules + frontend Vue toolchain)
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY packages/backend/package.json ./packages/backend/
-RUN pnpm install --filter @nexotv/backend
+COPY packages/frontend/package.json ./packages/frontend/
+RUN pnpm install
 
+# Remove build tools after native compilation
 RUN apk del python3 build-base
 
-COPY packages/backend/ ./packages/backend/
-COPY config/ ./config/
+# Build frontend (Vue + Vite)
+COPY packages/frontend/ ./packages/frontend/
+RUN pnpm --filter @nexotv/frontend build
 
+# Build backend (TypeScript)
+COPY packages/backend/ ./packages/backend/
 RUN pnpm --filter @nexotv/backend build
 
+# Copy runtime config and create data dir
+COPY config/ ./config/
 RUN mkdir -p /app/data
 
 EXPOSE 7000
