@@ -45,6 +45,7 @@ const env = {
     DATA_MEMORY_TTL_MS: parseInt(process.env.DATA_MEMORY_TTL_MS || '300000', 10),
     UPDATE_INTERVAL_MS: parseInt(process.env.UPDATE_INTERVAL_MS || '14400000', 10),
     MIN_UPDATE_INTERVAL_MS: parseInt(process.env.MIN_UPDATE_INTERVAL_MS || '1800000', 10),
+    EPG_UPDATE_INTERVAL_MS: parseInt(process.env.EPG_UPDATE_INTERVAL_MS || '') || 28800000,
     EPG_MAX_BYTES: parseInt(process.env.EPG_MAX_BYTES || '104857600', 10),
     CATALOG_PAGE_SIZE: parseInt(process.env.CATALOG_PAGE_SIZE || '100', 10),
     FETCH_TIMEOUT_MS: parseInt(process.env.FETCH_TIMEOUT_MS || '30000', 10),

@@ -90,6 +90,7 @@ export class M3UEPGAddon {
     m3uLastModified: string | null;
     iptvOrgEtag: string | null;
     xtreamEtag: string | null;
+    lastEpgUpdate: number | null;
     _evictTimer: any;
     _loadPromise: any;
     firstCatalogRefreshDone: boolean;
@@ -112,6 +113,7 @@ export class M3UEPGAddon {
         this.m3uLastModified = null;
         this.iptvOrgEtag = null;
         this.xtreamEtag = null;
+        this.lastEpgUpdate = null;
         this._evictTimer = null;
         this._loadPromise = null;
         this.firstCatalogRefreshDone = false;
@@ -152,6 +154,7 @@ export class M3UEPGAddon {
             m3uLastModified: this.m3uLastModified ?? null,
             iptvOrgEtag: this.iptvOrgEtag ?? null,
             xtreamEtag: this.xtreamEtag ?? null,
+            lastEpgUpdate: this.lastEpgUpdate ?? null,
         }, this.cacheTtl);
         this.log.debug('Channels saved to cache', { count: this.channels.length });
     }
@@ -167,6 +170,7 @@ export class M3UEPGAddon {
             this.m3uLastModified = cached.m3uLastModified ?? null;
             this.iptvOrgEtag = cached.iptvOrgEtag ?? null;
             this.xtreamEtag = cached.xtreamEtag ?? null;
+            this.lastEpgUpdate = cached.lastEpgUpdate ?? null;
             this.log.debug('Channels loaded from cache', { count: this.channels.length });
         }
     }
@@ -232,12 +236,15 @@ export class M3UEPGAddon {
             const start = Date.now();
             const providerModule = PROVIDER_MAP[this.providerName];
             if (!providerModule) throw new Error(`Unknown provider: ${this.providerName}`);
+            const epgUpdateTimeBefore = this.lastEpgUpdate;
             await providerModule.fetchData(this);
             this.channelMap = new Map(this.channels.map(c => [c.id, c]));
             this.lastUpdate = Date.now();
             if (CACHE_ENABLED) {
                 await this.saveChannelsToCache();
-                await this.saveEpgToCache();
+                if (this.lastEpgUpdate !== epgUpdateTimeBefore) {
+                    await this.saveEpgToCache();
+                }
             }
             this.buildGenresInManifest();
             this.log.debug('Data update complete', {

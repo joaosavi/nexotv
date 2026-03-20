@@ -97,15 +97,26 @@ export async function fetchData(addonInstance: any) {
             : detectedEpgUrl;
 
         if (epgSource) {
-            try {
-                await validatePublicUrl(epgSource);
-                const epgResp = await withTimeout(epgSource, {}, env.EPG_FETCH_TIMEOUT_MS);
-                if (epgResp.ok) {
-                    const epgContent = await epgResp.text();
-                    addonInstance.epgData = await parseEPG(epgContent, addonInstance.log);
+            const now = Date.now();
+            const epgStale = !addonInstance.lastEpgUpdate ||
+                (now - addonInstance.lastEpgUpdate > env.EPG_UPDATE_INTERVAL_MS);
+
+            if (epgStale) {
+                try {
+                    await validatePublicUrl(epgSource);
+                    const epgResp = await withTimeout(epgSource, {}, env.EPG_FETCH_TIMEOUT_MS);
+                    if (epgResp.ok) {
+                        const epgContent = await epgResp.text();
+                        addonInstance.epgData = await parseEPG(epgContent, addonInstance.log);
+                        addonInstance.lastEpgUpdate = Date.now();
+                    }
+                } catch {
+                    // EPG is optional — continue without it
                 }
-            } catch {
-                // EPG is optional — continue without it
+            } else {
+                addonInstance.log?.debug('EPG skip (interval not elapsed)', {
+                    ms: now - (addonInstance.lastEpgUpdate ?? 0)
+                });
             }
         }
     }

@@ -85,14 +85,26 @@ export async function fetchData(addonInstance: any) {
             ? customEpgUrl
             : `${xtreamUrl}/xmltv.php?username=${encodeURIComponent(xtreamUsername)}&password=${encodeURIComponent(xtreamPassword)}`;
 
-        try {
-            const epgResp = await withTimeout(epgSource, {}, env.EPG_FETCH_TIMEOUT_MS);
-            if (epgResp.ok) {
-                const epgContent = await epgResp.text();
-                addonInstance.epgData = await parseEPG(epgContent, addonInstance.log);
+        const now = Date.now();
+        const epgStale = !addonInstance.lastEpgUpdate ||
+            (now - addonInstance.lastEpgUpdate > env.EPG_UPDATE_INTERVAL_MS);
+
+        if (epgStale) {
+            try {
+                if (customEpgUrl) await validatePublicUrl(epgSource);
+                const epgResp = await withTimeout(epgSource, {}, env.EPG_FETCH_TIMEOUT_MS);
+                if (epgResp.ok) {
+                    const epgContent = await epgResp.text();
+                    addonInstance.epgData = await parseEPG(epgContent, addonInstance.log);
+                    addonInstance.lastEpgUpdate = Date.now();
+                }
+            } catch {
+                // Ignore EPG errors
             }
-        } catch {
-            // Ignore EPG errors
+        } else {
+            addonInstance.log?.debug('EPG skip (interval not elapsed)', {
+                ms: now - (addonInstance.lastEpgUpdate ?? 0)
+            });
         }
     }
 }
