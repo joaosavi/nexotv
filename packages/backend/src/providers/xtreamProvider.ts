@@ -1,4 +1,5 @@
 import { parseEPG } from '../parsers/epgParser';
+import { validatePublicUrl } from '../utils/validateUrl';
 
 async function withTimeout(url: string, options: any, ms: number) {
     const controller = new AbortController();
@@ -25,6 +26,7 @@ export async function fetchData(addonInstance: any) {
     addonInstance.channels = [];
     addonInstance.epgData = {};
 
+    await validatePublicUrl(xtreamUrl);
     const base = `${xtreamUrl}/player_api.php?username=${encodeURIComponent(xtreamUsername)}&password=${encodeURIComponent(xtreamPassword)}`;
     const [liveResp, liveCatsResp] = await Promise.all([
         withTimeout(`${base}&action=get_live_streams`, {}, 30000),

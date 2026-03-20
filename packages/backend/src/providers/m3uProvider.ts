@@ -3,6 +3,7 @@
 import crypto from 'crypto';
 import { parseM3U } from '../parsers/m3uParser';
 import { parseEPG } from '../parsers/epgParser';
+import { validatePublicUrl } from '../utils/validateUrl';
 
 async function withTimeout(url: string, options: any, ms: number) {
     const controller = new AbortController();
@@ -36,6 +37,7 @@ export async function fetchData(addonInstance: any) {
     addonInstance.channels = [];
     addonInstance.epgData = {};
 
+    await validatePublicUrl(m3uUrl.trim());
     const resp = await withTimeout(m3uUrl.trim(), {}, 30000);
     if (!resp.ok) throw new Error(`M3U playlist fetch failed: HTTP ${resp.status}`);
     const text = await resp.text();
@@ -78,6 +80,7 @@ export async function fetchData(addonInstance: any) {
 
         if (epgSource) {
             try {
+                await validatePublicUrl(epgSource);
                 const epgResp = await withTimeout(epgSource, {}, 60000);
                 if (epgResp.ok) {
                     const epgContent = await epgResp.text();

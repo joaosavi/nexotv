@@ -1,5 +1,13 @@
 'use strict';
 
+const MAX_LINE_LENGTH = 4096;
+
+const KNOWN_ATTR_NAMES = [
+    'tvg-id', 'tvg-name', 'tvg-logo', 'tvg-country', 'tvg-language',
+    'tvg-type', 'group-title', 'user-agent', 'referrer',
+    'catchup', 'catchup-days', 'catchup-source', 'x-tvg-url',
+];
+
 /**
  * Escape special regex metacharacters in a string.
  */
@@ -7,18 +15,40 @@ function escapeRegExp(str: string) {
     return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+// Pre-compiled attribute regexes to avoid per-call regex construction (ReDoS mitigation).
+const ATTR_REGEX_MAP: Record<string, [RegExp, RegExp]> = {};
+for (const attr of KNOWN_ATTR_NAMES) {
+    const escaped = escapeRegExp(attr);
+    ATTR_REGEX_MAP[attr] = [
+        new RegExp(`${escaped}="([^"]{0,2048})"`, 'i'),
+        new RegExp(`${escaped}=([^\\s,]{0,2048})`, 'i'),
+    ];
+}
+
 /**
  * Extract a named attribute value from an #EXTINF or #EXTM3U line.
+ * Returns null if the attribute is not found.
  */
-function extractAttr(line: string, attr: string) {
+function extractAttr(line: string, attr: string): string | null {
+    const regs = ATTR_REGEX_MAP[attr.toLowerCase()];
+    if (regs) {
+        const m = regs[0].exec(line) || regs[1].exec(line);
+        return m ? m[1] : null;
+    }
+    // Fallback dynamic regex for unknown attributes (backward compatibility).
     const escaped = escapeRegExp(attr);
-    const quotedRe = new RegExp(`${escaped}="([^"]*)"`, 'i');
-    const quotedMatch = line.match(quotedRe);
-    if (quotedMatch) return quotedMatch[1];
-    const unquotedRe = new RegExp(`${escaped}=([^\\s,]*)`, 'i');
-    const unquotedMatch = line.match(unquotedRe);
-    if (unquotedMatch) return unquotedMatch[1];
-    return '';
+    const m =
+        new RegExp(`${escaped}="([^"]{0,2048})"`, 'i').exec(line) ||
+        new RegExp(`${escaped}=([^\\s,]{0,2048})`, 'i').exec(line);
+    return m ? m[1] : null;
+}
+
+/**
+ * Strip HTTP header injection characters (CR, LF, null bytes) and truncate to 512 chars.
+ */
+function sanitizeHeaderValue(v: string | null | undefined): string | null {
+    if (!v) return null;
+    return v.replace(/[\r\n\0\x0b\x0c]/g, '').slice(0, 512) || null;
 }
 
 /**
@@ -45,6 +75,7 @@ export function parseM3U(text: string) {
     for (const rawLine of lines) {
         const line = rawLine.trim();
         if (!line) continue;
+        if (line.length > MAX_LINE_LENGTH) continue;
 
         if (line.startsWith('#EXTM3U')) {
             const tvgUrl = extractAttr(line, 'url-tvg') || extractAttr(line, 'x-tvg-url');
@@ -60,8 +91,8 @@ export function parseM3U(text: string) {
                 group:     extractAttr(line, 'group-title') || 'Uncategorized',
                 name:      extractChannelName(line),
                 url:       null,
-                userAgent: extractAttr(line, 'user-agent') || extractAttr(line, 'http-user-agent') || '',
-                referrer:  extractAttr(line, 'referrer') || extractAttr(line, 'http-referrer') || '',
+                userAgent: sanitizeHeaderValue(extractAttr(line, 'user-agent') || extractAttr(line, 'http-user-agent')),
+                referrer:  sanitizeHeaderValue(extractAttr(line, 'referrer') || extractAttr(line, 'http-referrer')),
             };
             continue;
         }
@@ -72,8 +103,8 @@ export function parseM3U(text: string) {
             if (eqIdx !== -1) {
                 const key = opt.slice(0, eqIdx).trim().toLowerCase();
                 const val = opt.slice(eqIdx + 1).trim();
-                if (key === 'http-user-agent') pendingChannel.userAgent = val;
-                if (key === 'http-referrer') pendingChannel.referrer = val;
+                if (key === 'http-user-agent') pendingChannel.userAgent = sanitizeHeaderValue(val);
+                if (key === 'http-referrer') pendingChannel.referrer = sanitizeHeaderValue(val);
             }
             continue;
         }
