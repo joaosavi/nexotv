@@ -4,7 +4,6 @@ import * as sqliteCache from '../utils/sqliteCache';
 import { makeLogger } from '../utils/logger';
 import { parseEPG, getCurrentProgram, getUpcomingPrograms } from '../parsers/epgParser';
 import env from '../config/env';
-import { UPDATE_INTERVAL_MS } from '../config/constants';
 import * as xtreamProvider from '../providers/xtreamProvider';
 import * as iptvOrgProvider from '../providers/iptvOrgProvider';
 import * as m3uProvider from '../providers/m3uProvider';
@@ -100,7 +99,7 @@ export class M3UEPGAddon {
         this.manifestRef = manifestRef;
         this.cacheKey = createCacheKey(config);
         this.idPrefix = this.cacheKey.slice(0, 8);
-        this.updateInterval = UPDATE_INTERVAL_MS;
+        this.updateInterval = 3600000; // 1 hour
         this.channels = [];
         this.channelMap = new Map();
         this.epgData = {};
