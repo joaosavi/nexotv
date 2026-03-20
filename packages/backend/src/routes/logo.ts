@@ -22,7 +22,7 @@ router.get('/:token/logo/:tvgId.png', async (req: any, res) => {
             const url = template.replace('{id}', cand);
             try {
                 const headCtrl = new AbortController();
-                const headTimer = setTimeout(() => headCtrl.abort(), 7000);
+                const headTimer = setTimeout(() => headCtrl.abort(), env.LOGO_TIMEOUT_MS);
                 let head: Response;
                 let methodUsed = 'HEAD';
                 try {
@@ -32,7 +32,7 @@ router.get('/:token/logo/:tvgId.png', async (req: any, res) => {
                 }
                 if (!head.ok) {
                     const getCtrl = new AbortController();
-                    const getTimer = setTimeout(() => getCtrl.abort(), 10000);
+                    const getTimer = setTimeout(() => getCtrl.abort(), env.LOGO_TIMEOUT_MS);
                     try {
                         head = await fetch(url, { method: 'GET', signal: getCtrl.signal });
                         methodUsed = 'GET';
@@ -57,7 +57,7 @@ router.get('/:token/logo/:tvgId.png', async (req: any, res) => {
                             let resResponse = head;
                             if (methodUsed === 'HEAD') {
                                 const getCtrl = new AbortController();
-                                const getTimer = setTimeout(() => getCtrl.abort(), 10000);
+                                const getTimer = setTimeout(() => getCtrl.abort(), env.LOGO_TIMEOUT_MS);
                                 try {
                                     resResponse = await fetch(url, { method: 'GET', signal: getCtrl.signal });
                                 } finally {

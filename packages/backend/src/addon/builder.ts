@@ -64,7 +64,7 @@ async function createAddon(config: AddonConfig) {
                     const q = extra.search.toLowerCase();
                     items = items.filter((i: any) => i.name.toLowerCase().includes(q));
                 }
-                const PAGE_SIZE = 100;
+                const PAGE_SIZE = env.CATALOG_PAGE_SIZE;
                 const skip = parseInt(extra.skip || '0', 10) || 0;
                 const metas = items.slice(skip, skip + PAGE_SIZE).map((i: any) => addonInstance.generateMetaPreview(i));
                 if (env.DEBUG) {
