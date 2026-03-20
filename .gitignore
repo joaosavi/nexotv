@@ -4,6 +4,8 @@
 
 # Dependencies
 node_modules/
+packages/*/node_modules/
+packages/*/dist/
 
 # IDEs and Editors
 .vscode/
@@ -29,6 +31,8 @@ yarn-error.log*
 
 # Test coverage
 coverage/
+packages/backend/coverage/
+packages/backend/.vitest-cache/
 
 # Project specific
 .agent/

@@ -25,9 +25,22 @@
 git clone https://github.com/joaosavi/nexotv.git
 cd nexotv
 cp .env.example .env
-npm install
-npm start
+pnpm install
+pnpm --filter backend dev
 # Open http://localhost:7000/configure
+```
+
+### Dev Workflow (full-stack)
+
+```bash
+# Backend only (port 7000, tsx watch)
+pnpm --filter backend dev
+
+# Frontend only (port 5173, Vite dev server — proxies /api and /encrypt to port 7000)
+pnpm --filter frontend dev
+
+# Both concurrently
+pnpm dev
 ```
 
 ---
@@ -136,10 +149,10 @@ Browser (Config UI)
 POST /api/prefetch  ← SSRF-guarded (hostname + DNS check)
     │ config JSON → token (base64url or enc:)
     ▼
-server.js  → decrypt token → createAddon(config) → SQLite cache
+packages/backend/server.ts  → decrypt token → createAddon(config) → SQLite cache
     │
     ▼
-src/addon/builder.js  (M3UEPGAddon)
+packages/backend/src/addon/builder.ts  (M3UEPGAddon)
     ├── xtreamProvider   → Xtream Codes API
     ├── iptvOrgProvider  → iptv-org JSON API
     └── m3uProvider      → M3U/M3U+ playlist + EPG
