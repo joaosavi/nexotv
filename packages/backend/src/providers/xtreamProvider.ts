@@ -24,17 +24,28 @@ export async function fetchData(addonInstance: any) {
         throw new Error('Xtream credentials incomplete');
     }
 
-    addonInstance.channels = [];
-    addonInstance.epgData = {};
-
     await validatePublicUrl(xtreamUrl);
     const base = `${xtreamUrl}/player_api.php?username=${encodeURIComponent(xtreamUsername)}&password=${encodeURIComponent(xtreamPassword)}`;
+
+    const liveHeaders: Record<string, string> = {};
+    if (addonInstance.xtreamEtag) liveHeaders['If-None-Match'] = addonInstance.xtreamEtag;
+
     const [liveResp, liveCatsResp] = await Promise.all([
-        withTimeout(`${base}&action=get_live_streams`, {}, env.FETCH_TIMEOUT_MS),
+        withTimeout(`${base}&action=get_live_streams`, { headers: liveHeaders }, env.FETCH_TIMEOUT_MS),
         withTimeout(`${base}&action=get_live_categories`, {}, env.FETCH_TIMEOUT_MS).catch(() => null)
     ]);
 
+    if (liveResp.status === 304) {
+        addonInstance.log?.debug('Xtream 304 Not Modified — skipping update');
+        return;
+    }
     if (!liveResp.ok) throw new Error('Xtream live streams fetch failed');
+
+    addonInstance.xtreamEtag = liveResp.headers.get('etag') ?? null;
+
+    addonInstance.channels = [];
+    addonInstance.epgData = {};
+
     const live = await liveResp.json();
 
     let liveCatMap: Record<string, string> = {};

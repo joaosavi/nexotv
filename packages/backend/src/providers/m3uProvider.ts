@@ -35,12 +35,29 @@ export async function fetchData(addonInstance: any) {
         throw new Error('M3U URL is required');
     }
 
+    await validatePublicUrl(m3uUrl.trim());
+
+    const conditionalHeaders: Record<string, string> = {};
+    if (addonInstance.m3uEtag) {
+        conditionalHeaders['If-None-Match'] = addonInstance.m3uEtag;
+    } else if (addonInstance.m3uLastModified) {
+        conditionalHeaders['If-Modified-Since'] = addonInstance.m3uLastModified;
+    }
+
+    const resp = await withTimeout(m3uUrl.trim(), { headers: conditionalHeaders }, env.FETCH_TIMEOUT_MS);
+
+    if (resp.status === 304) {
+        addonInstance.log?.debug('M3U 304 Not Modified — skipping parse');
+        return;
+    }
+    if (!resp.ok) throw new Error(`M3U playlist fetch failed: HTTP ${resp.status}`);
+
+    addonInstance.m3uEtag = resp.headers.get('etag') ?? null;
+    addonInstance.m3uLastModified = resp.headers.get('last-modified') ?? null;
+
     addonInstance.channels = [];
     addonInstance.epgData = {};
 
-    await validatePublicUrl(m3uUrl.trim());
-    const resp = await withTimeout(m3uUrl.trim(), {}, env.FETCH_TIMEOUT_MS);
-    if (!resp.ok) throw new Error(`M3U playlist fetch failed: HTTP ${resp.status}`);
     const text = await resp.text();
 
     const { channels: parsed, epgUrl: detectedEpgUrl } = parseM3U(text);
