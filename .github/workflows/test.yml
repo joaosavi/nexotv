@@ -2,9 +2,9 @@ name: Test
 
 on:
   push:
-    branches: [main, 'refactor/**']
+    branches: [main, dev, 'refactor/**']
   pull_request:
-    branches: [main, 'refactor/**']
+    branches: [main, dev, 'refactor/**']
 
 jobs:
   test:
