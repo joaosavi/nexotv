@@ -8,22 +8,42 @@ async function fetchJson(url: string) {
     return res.json();
 }
 
+async function fetchJsonConditional(url: string, etag: string | null): Promise<{ data: any | null; etag: string | null }> {
+    const headers: Record<string, string> = {};
+    if (etag) headers['If-None-Match'] = etag;
+    const res = await fetch(url, { headers });
+    if (res.status === 304) return { data: null, etag };
+    if (!res.ok) throw new Error(`iptv-org fetch failed: ${url} (${res.status})`);
+    return { data: await res.json(), etag: res.headers.get('etag') ?? null };
+}
+
 export async function fetchData(addonInstance: any) {
     const { config } = addonInstance;
 
     const filterCountries = config.iptvOrgCountry ? config.iptvOrgCountry.split(',').map((c: string) => c.trim().toUpperCase()).filter((c: string) => c) : [];
     const filterCategories = config.iptvOrgCategory ? config.iptvOrgCategory.split(',').map((c: string) => c.trim().toLowerCase()).filter((c: string) => c) : [];
 
-    addonInstance.channels = [];
-    addonInstance.epgData = {};
-
     addonInstance.log.debug('[iptvOrg] Fetching channels + streams in parallel…');
 
-    const [channelsRaw, streamsRaw, logosRaw] = await Promise.all([
-        fetchJson(`${IPTV_ORG_BASE}/channels.json`),
+    const channelsResult = await fetchJsonConditional(
+        `${IPTV_ORG_BASE}/channels.json`,
+        addonInstance.iptvOrgEtag
+    );
+
+    if (channelsResult.data === null) {
+        addonInstance.log.debug('[iptvOrg] 304 Not Modified — skipping update');
+        return;
+    }
+
+    const [streamsRaw, logosRaw] = await Promise.all([
         fetchJson(`${IPTV_ORG_BASE}/streams.json`),
         fetchJson(`${IPTV_ORG_BASE}/logos.json`),
     ]);
+    const channelsRaw = channelsResult.data;
+    addonInstance.iptvOrgEtag = channelsResult.etag;
+
+    addonInstance.channels = [];
+    addonInstance.epgData = {};
 
     const streamMap: Record<string, string[]> = {};
     for (const s of streamsRaw) {
