@@ -11,7 +11,7 @@
     "test": "vitest run --passWithNoTests",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage --passWithNoTests",
-    "test:bench": "vitest bench"
+    "test:bench": "vitest bench --run"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.2",
