@@ -1,23 +1,15 @@
 {
-  "name": "nexotv",
-  "version": "2.0.0",
-  "description": "Stream your IPTV channels in Stremio",
-  "main": "server.js",
+  "name": "nexotv-monorepo",
+  "private": true,
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js"
-  },
-  "dependencies": {
-    "better-sqlite3": "^12.6.2",
-    "compression": "^1.8.1",
-    "dotenv": "^17.2.1",
-    "express": "^4.18.2",
-    "express-rate-limit": "^8.2.1",
-    "stremio-addon-sdk": "^1.6.10",
-    "xml2js": "^0.4.23"
+    "dev": "concurrently \"pnpm --filter backend dev\" \"pnpm --filter frontend dev\"",
+    "build": "pnpm --filter frontend build && pnpm --filter backend build",
+    "start": "pnpm --filter backend start"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "concurrently": "^8.0.0"
   },
-  "license": "MIT"
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3", "esbuild"]
+  }
 }
