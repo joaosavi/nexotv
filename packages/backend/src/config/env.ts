@@ -43,6 +43,14 @@ const env = {
     M3U_CACHE_TTL_MS: parseInt(process.env.M3U_CACHE_TTL_MS || '') || 21600000,
     ALLOW_LOCAL_URLS: (process.env.ALLOW_LOCAL_URLS || 'false').toLowerCase() === 'true',
     DATA_MEMORY_TTL_MS: parseInt(process.env.DATA_MEMORY_TTL_MS || '300000', 10),
+    UPDATE_INTERVAL_MS: parseInt(process.env.UPDATE_INTERVAL_MS || '3600000', 10),
+    MIN_UPDATE_INTERVAL_MS: parseInt(process.env.MIN_UPDATE_INTERVAL_MS || '900000', 10),
+    EPG_MAX_BYTES: parseInt(process.env.EPG_MAX_BYTES || '104857600', 10),
+    CATALOG_PAGE_SIZE: parseInt(process.env.CATALOG_PAGE_SIZE || '100', 10),
+    FETCH_TIMEOUT_MS: parseInt(process.env.FETCH_TIMEOUT_MS || '30000', 10),
+    EPG_FETCH_TIMEOUT_MS: parseInt(process.env.EPG_FETCH_TIMEOUT_MS || '60000', 10),
+    PREFETCH_TIMEOUT_MS: parseInt(process.env.PREFETCH_TIMEOUT_MS || '45000', 10),
+    LOGO_TIMEOUT_MS: parseInt(process.env.LOGO_TIMEOUT_MS || '10000', 10),
 };
 
 export { repoRoot };

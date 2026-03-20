@@ -49,7 +49,7 @@ router.post('/api/prefetch', async (req, res) => {
         }
 
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 45000);
+        const timeout = setTimeout(() => controller.abort(), env.PREFETCH_TIMEOUT_MS);
 
         let fetched: Response;
         try {

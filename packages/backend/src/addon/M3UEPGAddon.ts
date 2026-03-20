@@ -99,7 +99,7 @@ export class M3UEPGAddon {
         this.manifestRef = manifestRef;
         this.cacheKey = createCacheKey(config);
         this.idPrefix = this.cacheKey.slice(0, 8);
-        this.updateInterval = 3600000; // 1 hour
+        this.updateInterval = env.UPDATE_INTERVAL_MS;
         this.channels = [];
         this.channelMap = new Map();
         this.epgData = {};
@@ -207,7 +207,7 @@ export class M3UEPGAddon {
                 this.log.debug('Skip update (global interval)');
                 return;
             }
-            if (this.channels.length && now - this.lastUpdate < 900000) {
+            if (this.channels.length && now - this.lastUpdate < env.MIN_UPDATE_INTERVAL_MS) {
                 this.log.debug('Skip update (recent minor interval)');
                 return;
             }

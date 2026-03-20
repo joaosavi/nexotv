@@ -1,5 +1,6 @@
 import { parseEPG } from '../parsers/epgParser';
 import { validatePublicUrl } from '../utils/validateUrl';
+import env from '../config/env';
 
 async function withTimeout(url: string, options: any, ms: number) {
     const controller = new AbortController();
@@ -29,8 +30,8 @@ export async function fetchData(addonInstance: any) {
     await validatePublicUrl(xtreamUrl);
     const base = `${xtreamUrl}/player_api.php?username=${encodeURIComponent(xtreamUsername)}&password=${encodeURIComponent(xtreamPassword)}`;
     const [liveResp, liveCatsResp] = await Promise.all([
-        withTimeout(`${base}&action=get_live_streams`, {}, 30000),
-        withTimeout(`${base}&action=get_live_categories`, {}, 20000).catch(() => null)
+        withTimeout(`${base}&action=get_live_streams`, {}, env.FETCH_TIMEOUT_MS),
+        withTimeout(`${base}&action=get_live_categories`, {}, env.FETCH_TIMEOUT_MS).catch(() => null)
     ]);
 
     if (!liveResp.ok) throw new Error('Xtream live streams fetch failed');
@@ -74,7 +75,7 @@ export async function fetchData(addonInstance: any) {
             : `${xtreamUrl}/xmltv.php?username=${encodeURIComponent(xtreamUsername)}&password=${encodeURIComponent(xtreamPassword)}`;
 
         try {
-            const epgResp = await withTimeout(epgSource, {}, 45000);
+            const epgResp = await withTimeout(epgSource, {}, env.EPG_FETCH_TIMEOUT_MS);
             if (epgResp.ok) {
                 const epgContent = await epgResp.text();
                 addonInstance.epgData = await parseEPG(epgContent, addonInstance.log);
