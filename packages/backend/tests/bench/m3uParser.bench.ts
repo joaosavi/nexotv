@@ -12,9 +12,9 @@ const m3u_50k = generateLargeM3U(50_000);
 // 50k: <800ms
 
 describe('parseM3U performance', () => {
-  bench('1k channels',  () => parseM3U(m3u_1k));
-  bench('10k channels', () => parseM3U(m3u_10k));
-  bench('50k channels', () => parseM3U(m3u_50k));
+  bench('1k channels',  () => { parseM3U(m3u_1k); });
+  bench('10k channels', () => { parseM3U(m3u_10k); });
+  bench('50k channels', () => { parseM3U(m3u_50k); });
 });
 
 it('parseM3U with 50k channels does not exceed 200MB heap increase', () => {
