@@ -11,6 +11,7 @@ vi.mock('../../src/config/env', () => ({
     IPTV_ORG_CACHE_TTL_MS: 21600000,
     M3U_CACHE_TTL_MS: 21600000,
     DATA_MEMORY_TTL_MS: 300000,
+    UPDATE_INTERVAL_MS: 14400000,
     SQLITE_PATH: null,
   },
   repoRoot: '/tmp',
@@ -135,5 +136,53 @@ describe('deriveFallbackLogoUrl', () => {
     const item = { name: 'Test', logo: 'https://i.imgur.com/abc123.png' };
     const url = addon.deriveFallbackLogoUrl(item);
     expect(url).toContain('wsrv.nl');
+  });
+});
+
+// ─── Background Update Timer ──────────────────────────────────────────────────
+
+describe('_startUpdateTimer', () => {
+  it('is idempotent — calling twice does not create two timers', () => {
+    vi.useFakeTimers();
+    const addon = new M3UEPGAddon({ provider: 'm3u' });
+    (addon as any)._startUpdateTimer();
+    const first = (addon as any)._updateTimer;
+    (addon as any)._startUpdateTimer();
+    const second = (addon as any)._updateTimer;
+    expect(first).toBe(second);
+    vi.useRealTimers();
+  });
+
+  it('sets _updateTimer to a non-null value', () => {
+    vi.useFakeTimers();
+    const addon = new M3UEPGAddon({ provider: 'm3u' });
+    expect((addon as any)._updateTimer).toBeNull();
+    (addon as any)._startUpdateTimer();
+    expect((addon as any)._updateTimer).not.toBeNull();
+    vi.useRealTimers();
+  });
+});
+
+describe('_evictFromMemory timer cleanup', () => {
+  it('sets _updateTimer to null after eviction', () => {
+    vi.useFakeTimers();
+    const addon = new M3UEPGAddon({ provider: 'm3u' });
+    (addon as any)._startUpdateTimer();
+    expect((addon as any)._updateTimer).not.toBeNull();
+    addon._evictFromMemory();
+    expect((addon as any)._updateTimer).toBeNull();
+    vi.useRealTimers();
+  });
+
+  it('does not trigger updateData after eviction (ghost-config prevention)', async () => {
+    vi.useFakeTimers();
+    const addon = new M3UEPGAddon({ provider: 'm3u' });
+    const spy = vi.spyOn(addon, 'updateData').mockResolvedValue(undefined);
+    (addon as any)._startUpdateTimer();
+    addon._evictFromMemory();
+    // Advance well past update interval — should NOT trigger updateData
+    vi.advanceTimersByTime(14400000 * 3);
+    expect(spy).not.toHaveBeenCalled();
+    vi.useRealTimers();
   });
 });

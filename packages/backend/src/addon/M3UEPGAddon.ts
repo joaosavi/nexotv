@@ -92,6 +92,7 @@ export class M3UEPGAddon {
     xtreamEtag: string | null;
     lastEpgUpdate: number | null;
     _evictTimer: any;
+    private _updateTimer: ReturnType<typeof setInterval> | null;
     _loadPromise: any;
     firstCatalogRefreshDone: boolean;
     firstCatalogRefreshPromise: any;
@@ -115,6 +116,7 @@ export class M3UEPGAddon {
         this.xtreamEtag = null;
         this.lastEpgUpdate = null;
         this._evictTimer = null;
+        this._updateTimer = null;
         this._loadPromise = null;
         this.firstCatalogRefreshDone = false;
         this.firstCatalogRefreshPromise = null;
@@ -401,11 +403,27 @@ export class M3UEPGAddon {
         this._evictTimer = setTimeout(() => this._evictFromMemory(), env.DATA_MEMORY_TTL_MS);
     }
 
+    private _startUpdateTimer() {
+        if (this._updateTimer !== null) return; // already running — guard against double-start
+        this._updateTimer = setInterval(() => {
+            this.updateData().catch((e: any) => {
+                this.log.error('[TIMER] Background update failed:', e.message);
+            });
+        }, env.UPDATE_INTERVAL_MS);
+        // unref: don't prevent Node.js process exit if this is the only active handle
+        if (typeof (this._updateTimer as any).unref === 'function') {
+            (this._updateTimer as any).unref();
+        }
+    }
+
     _evictFromMemory() {
+        clearTimeout(this._evictTimer);
+        clearInterval(this._updateTimer);   // kill update timer
+        this._updateTimer = null;           // allow GC and re-start check
+        this._evictTimer = null;
         this.channels = [];
         this.channelMap = new Map();
         this.epgData = {};
-        this._evictTimer = null;
         this.log.debug('Data evicted from RAM', { cacheKey: this.cacheKey });
     }
 
@@ -422,6 +440,7 @@ export class M3UEPGAddon {
         this._loadPromise = this.loadChannelsFromCache().finally(() => { this._loadPromise = null; });
         await this._loadPromise;
         this._resetEvictTimer();
+        this._startUpdateTimer();    // start/resume background updates
     }
 
     async getChannelsForCatalog() {
