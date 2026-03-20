@@ -1,10 +1,18 @@
 import xml2js from 'xml2js';
 import { makeLogger } from '../utils/logger';
 
+const MAX_EPG_BYTES = 100 * 1024 * 1024; // 100 MB
+
 /**
  * Parse XMLTV EPG content into a channel-keyed object.
  */
 export async function parseEPG(content: string, log?: ReturnType<typeof makeLogger>) {
+    if (Buffer.byteLength(content, 'utf8') > MAX_EPG_BYTES) {
+        const sizeMb = (Buffer.byteLength(content, 'utf8') / 1024 / 1024).toFixed(1);
+        if (log) log.warn(`[EPG] Content too large (${sizeMb} MB), skipping`);
+        return {};
+    }
+
     const start = Date.now();
     try {
         const parser = new xml2js.Parser();

@@ -39,7 +39,8 @@ router.use('/:token', async (req: any, res, next) => {
     try {
         config = maybeDecryptConfig(token);
     } catch (e: any) {
-        log.debug('Config parse failed', token, e.message);
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex').slice(0, 8);
+        log.debug('Config parse failed', `[token:${tokenHash}…]`, e.message);
         return res.status(400).json({ error: 'Invalid configuration token' });
     }
     config.provider = config.provider || 'xtream';

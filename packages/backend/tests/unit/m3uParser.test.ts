@@ -50,10 +50,10 @@ describe('parseM3U', () => {
     expect(channels[1].tvgId).toBe('ch2');
   });
 
-  it('falls back to empty tvg-id when tvg-id attribute absent', () => {
+  it('falls back to null tvg-id when tvg-id attribute absent', () => {
     const m3u = '#EXTM3U\n#EXTINF:-1 tvg-name="No ID",No ID Channel\nhttp://stream.example.com/noid';
     const { channels } = parseM3U(m3u);
-    expect(channels[0].tvgId).toBe('');
+    expect(channels[0].tvgId).toBeNull();
   });
 
   it('handles CRLF line endings', () => {
