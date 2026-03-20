@@ -242,7 +242,7 @@ export class M3UEPGAddon {
             await providerModule.fetchData(this);
             this.channelMap = new Map(this.channels.map(c => [c.id, c]));
             this.lastUpdate = Date.now();
-            if (CACHE_ENABLED) {
+            if (CACHE_ENABLED && this.channels.length > 0) {
                 await this.saveChannelsToCache();
                 if (this.lastEpgUpdate !== epgUpdateTimeBefore) {
                     await this.saveEpgToCache();
@@ -273,6 +273,13 @@ export class M3UEPGAddon {
         }
 
         this.firstCatalogRefreshPromise = (async () => {
+            // Reset ETags so the forced re-fetch is unconditional (not a 304).
+            // Without this, channels evicted from RAM + a cached ETag would cause
+            // fetchData to get a 304, save 0 channels, and wipe the valid cache.
+            this.m3uEtag = null;
+            this.m3uLastModified = null;
+            this.iptvOrgEtag = null;
+            this.xtreamEtag = null;
             if (CACHE_ENABLED) {
                 sqliteCache.del('addon:channels:' + this.cacheKey);
                 sqliteCache.del('addon:epg:' + this.cacheKey);
