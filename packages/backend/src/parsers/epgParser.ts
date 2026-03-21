@@ -20,7 +20,12 @@ export async function parseEPG(content: string, log?: ReturnType<typeof makeLogg
         if (result.tv && result.tv.programme) {
             const cutoff = Date.now() - 3600 * 1000; // 1 hour ago
             const nowTime = Date.now();
+            let eventCount = 0;
             for (const prog of result.tv.programme) {
+                // Yield every 5000 programmes to keep the event loop responsive
+                if (++eventCount % 5000 === 0) {
+                    await new Promise<void>(resolve => setImmediate(resolve));
+                }
                 const stopDate = parseEPGTime(prog.$.stop);
                 if (stopDate.getTime() < cutoff) continue;
 
