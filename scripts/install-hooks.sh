@@ -21,7 +21,7 @@ if [ "$CURRENT_BRANCH" = "dev" ]; then
   exit 0
 fi
 
-DEV_ONLY_PATTERNS="CLAUDE.md .claude/ beamup.json tmp/deploy_beamup tmp/beamup-config tmp/plans"
+DEV_ONLY_PATTERNS="CLAUDE.md .claude/ beamup.json tmp/beamup-config tmp/plans"
 
 FOUND=""
 for pattern in $DEV_ONLY_PATTERNS; do
