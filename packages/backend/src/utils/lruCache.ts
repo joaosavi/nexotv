@@ -50,15 +50,22 @@ class LRUCache {
         this.map.clear();
     }
 
+    /**
+     * Returns the raw map size, including TTL-expired entries not yet lazy-evicted.
+     * Use as an upper-bound estimate of live entries, not an exact count.
+     */
     getSize(): number {
         return this.map.size;
     }
 
     evictLeastRecentlyUsed(n: number): number {
+        if (n <= 0) return 0;
         // Map maintains insertion order; LRU entries are at the front.
         // Promote-on-get moves accessed entries to the end, so front = oldest.
+        // Snapshot keys to avoid mutating the map while iterating.
+        const keys = Array.from(this.map.keys());
         let evicted = 0;
-        for (const key of this.map.keys()) {
+        for (const key of keys) {
             if (evicted >= n) break;
             this.map.delete(key);
             evicted++;
