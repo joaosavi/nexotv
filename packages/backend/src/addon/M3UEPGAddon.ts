@@ -96,6 +96,10 @@ export class M3UEPGAddon {
     _loadPromise: any;
     firstCatalogRefreshDone: boolean;
     firstCatalogRefreshPromise: any;
+    private _consecutiveRefreshFailures = 0;
+    private _refreshFailedAt: number | null = null;
+    private _timerConsecutiveFailures = 0;
+    private _timerPausedUntil: number | null = null;
     cacheTtl: number;
     log: ReturnType<typeof makeLogger>;
 
@@ -259,7 +263,20 @@ export class M3UEPGAddon {
         }
     }
 
+    private _getRefreshCooldownMs(): number {
+        if (this._consecutiveRefreshFailures <= 0) return 0;
+        if (this._consecutiveRefreshFailures === 1) return 60_000;      // 1 min
+        if (this._consecutiveRefreshFailures === 2) return 5 * 60_000;  // 5 min
+        return 30 * 60_000;                                              // 30 min
+    }
+
     async refreshOnFirstCatalogRequest() {
+        // Exponential backoff: don't hammer a failing provider
+        if (this._refreshFailedAt !== null) {
+            const cooldown = this._getRefreshCooldownMs();
+            if (Date.now() - this._refreshFailedAt < cooldown) return;
+        }
+
         if (this.firstCatalogRefreshDone) return;
         if (this.firstCatalogRefreshPromise) {
             await this.firstCatalogRefreshPromise;
@@ -294,6 +311,12 @@ export class M3UEPGAddon {
 
         try {
             await this.firstCatalogRefreshPromise;
+            this._consecutiveRefreshFailures = 0;  // reset on success
+            this._refreshFailedAt = null;
+        } catch (e) {
+            this._consecutiveRefreshFailures++;
+            this._refreshFailedAt = Date.now();
+            throw e;
         } finally {
             this.firstCatalogRefreshPromise = null;
         }
@@ -413,7 +436,18 @@ export class M3UEPGAddon {
     private _startUpdateTimer() {
         if (this._updateTimer !== null) return; // already running — guard against double-start
         this._updateTimer = setInterval(() => {
-            this.updateData().catch((e: any) => {
+            // Skip if circuit is open
+            if (this._timerPausedUntil !== null && Date.now() < this._timerPausedUntil) return;
+
+            this.updateData().then(() => {
+                this._timerConsecutiveFailures = 0;
+                this._timerPausedUntil = null;
+            }).catch((e: any) => {
+                this._timerConsecutiveFailures++;
+                if (this._timerConsecutiveFailures >= 3) {
+                    this._timerPausedUntil = Date.now() + 30 * 60_000; // pause 30 min
+                    this.log.warn(`[TIMER] Circuit open after ${this._timerConsecutiveFailures} failures, pausing 30 min`);
+                }
                 this.log.error('[TIMER] Background update failed:', e.message);
             });
         }, env.UPDATE_INTERVAL_MS);
