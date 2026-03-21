@@ -14,7 +14,7 @@ export function createManifest(idPrefix?: string) {
                 id: 'iptv_channels',
                 name: env.ADDON_NAME,
                 extra: [
-                    { name: 'genre', isRequired: false, options: [] },
+                    { name: 'genre', isRequired: true, options: [] },
                     { name: 'search', isRequired: false },
                     { name: 'skip' }
                 ],
