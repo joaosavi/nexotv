@@ -116,16 +116,21 @@ function runWatchdog(cache: LRUCache): void {
 
     // --- CRITICAL threshold + auto-eviction ---
     if (sample.heapMb > criticalMb) {
-        const evictionCooldown = intervalMs * 3;
-        if (now - lastEvictionTs > evictionCooldown) {
+        // Emergency zone: heap is 15%+ above critical — bypass cooldown and evict all entries.
+        // Normal zone: cooldown of 1 interval (30s) between evictions.
+        const emergency = sample.heapMb > criticalMb * 1.15;
+        const evictionCooldown = intervalMs; // 30s (was 3× = 90s — too slow for fast-growing heaps)
+        if (emergency || now - lastEvictionTs > evictionCooldown) {
             const cacheSize = cache.getSize();
             if (cacheSize > 0) {
-                const n = Math.ceil(cacheSize / 2);
+                // Emergency: evict everything; normal: evict half
+                const n = emergency ? cacheSize : Math.ceil(cacheSize / 2);
                 const evicted = cache.evictLeastRecentlyUsed(n);
                 lastEvictionAt = new Date(now).toISOString();
                 lastEvictionTs = now;
                 log.error(
                     `heap critical ${sample.heapMb.toFixed(1)}MB (>${criticalMb}MB)` +
+                    `${emergency ? ' [EMERGENCY — full eviction]' : ''}` +
                     ` — evicted ${evicted} idle LRU entries`
                 );
             } else {
