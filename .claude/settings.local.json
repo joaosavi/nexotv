@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Bash(timeout 5 node -e \"require\\(''''./server.js''''\\)\")",
+      "Bash(npm test:*)",
+      "Bash(node -e \":*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:stremio.github.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:community.stremio.com)",
+      "Bash(ls -la /c/Users/SV/Desktop/code/iptv-stremio-addon/*.js)",
+      "WebFetch(domain:www.reddit.com)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git:*)",
+      "Bash(node:*)",
+      "Bash(grep -E \"^-.*\\\\.\\(md|MD\\)$|^d.*docs\")",
+      "WebFetch(domain:api.github.com)"
+    ]
+  },
+  "worktree": {
+    "symlinkDirectories": [
+      ".claude",
+      "tmp",
+      "dist",
+      "docs",
+      "node_modules",
+      "coverage",
+      "build",
+      "examples",
+      "test",
+      "tests",
+      "data"
+    ]
+  }
+}
