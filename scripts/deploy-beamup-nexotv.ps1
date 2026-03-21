@@ -1,7 +1,7 @@
 # deploy-beamup-nexotv.ps1
 # Deploy do nexotv para o beamup usando git worktree isolado.
 # Na primeira execucao roda 'beamup init nexotv' automaticamente.
-# Preencha o CONFIG_SECRET em tmp/beamup-nexotv-env.ts antes de rodar.
+# Preencha o CONFIG_SECRET em tmp/beamup-config/beamup-nexotv-env.ts antes de rodar.
 
 $ErrorActionPreference = "Stop"
 
@@ -16,7 +16,7 @@ function Invoke-Checked {
 
 $ProjectRoot  = Split-Path -Parent $PSScriptRoot
 $WorktreePath = Join-Path (Split-Path -Parent $ProjectRoot) "nexotv-beamup-deploy"
-$EnvSource    = Join-Path $PSScriptRoot "beamup-nexotv-env.ts"
+$EnvSource    = Join-Path $ProjectRoot "tmp\beamup-config\beamup-nexotv-env.ts"
 $EnvTarget    = Join-Path $WorktreePath "packages\backend\src\config\env.ts"
 
 Write-Host "==> Iniciando deploy do nexotv no beamup..." -ForegroundColor Cyan
@@ -26,7 +26,7 @@ Write-Host "    Worktree        : $WorktreePath"
 # Validar que CONFIG_SECRET foi preenchido
 $envContent = Get-Content $EnvSource -Raw
 if ($envContent -match "PREENCHA_AQUI") {
-    Write-Host "`n[ERRO] Preencha o CONFIG_SECRET em tmp/beamup-nexotv-env.ts antes de fazer deploy." -ForegroundColor Red
+    Write-Host "`n[ERRO] Preencha o CONFIG_SECRET em tmp/beamup-config/beamup-nexotv-env.ts antes de fazer deploy." -ForegroundColor Red
     exit 1
 }
 
@@ -57,7 +57,7 @@ Set-Location $WorktreePath
 Invoke-Checked git @("rm", "Dockerfile")
 Copy-Item -Path $EnvSource -Destination $EnvTarget -Force
 
-$PlaylistSource = Join-Path $PSScriptRoot "public-playlists.json"
+$PlaylistSource = Join-Path $ProjectRoot "tmp\beamup-config\public-playlists.json"
 $PlaylistTarget = Join-Path $WorktreePath "config\public-playlists.json"
 if (Test-Path $PlaylistSource) {
     Copy-Item -Path $PlaylistSource -Destination $PlaylistTarget -Force

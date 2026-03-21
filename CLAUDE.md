@@ -11,7 +11,7 @@ The following files/folders are tracked **exclusively on the `dev` branch** for 
 | `CLAUDE.md` | This file itself — AI instructions, not production config |
 | `.claude/` | Claude Code settings, skills, local config |
 | `beamup.json` | Deployment credentials/config |
-| `tmp/deploy_beamup/` | Deploy scripts with secrets |
+| `tmp/beamup-config/` | Deploy env config and playlists |
 | `tmp/plans/` | Internal planning documents |
 
 ### Rules for ALL commit and PR operations
