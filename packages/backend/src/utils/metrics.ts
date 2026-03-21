@@ -34,7 +34,7 @@ let lastEvictionAt: string | null = null;
 let lastSpikeLogAt = 0;   // wall-clock ms — cooldown for spike log spam
 let lastEvictionTs = 0;   // wall-clock ms — cooldown for repeated evictions
 
-// CPU accounting — initialised before the first interval tick
+// CPU accounting — reset in startWatchdog() just before the first tick
 let prevCpuUsage = process.cpuUsage();
 let prevSampleTime = Date.now();
 
@@ -111,20 +111,29 @@ function runWatchdog(cache: LRUCache): void {
         }
     } else if (sample.heapMb < warnMb) {
         spikeFlagged = false;
+        lastSpikeLogAt = 0; // reset cooldown so next spike episode gets its own log
     }
 
     // --- CRITICAL threshold + auto-eviction ---
     if (sample.heapMb > criticalMb) {
         const evictionCooldown = intervalMs * 3;
         if (now - lastEvictionTs > evictionCooldown) {
-            const n = Math.ceil(cache.getSize() / 2);
-            const evicted = cache.evictLeastRecentlyUsed(n);
-            lastEvictionAt = new Date(now).toISOString();
-            lastEvictionTs = now;
-            log.error(
-                `heap critical ${sample.heapMb.toFixed(1)}MB (>${criticalMb}MB)` +
-                ` — evicted ${evicted} idle LRU entries`
-            );
+            const cacheSize = cache.getSize();
+            if (cacheSize > 0) {
+                const n = Math.ceil(cacheSize / 2);
+                const evicted = cache.evictLeastRecentlyUsed(n);
+                lastEvictionAt = new Date(now).toISOString();
+                lastEvictionTs = now;
+                log.error(
+                    `heap critical ${sample.heapMb.toFixed(1)}MB (>${criticalMb}MB)` +
+                    ` — evicted ${evicted} idle LRU entries`
+                );
+            } else {
+                log.error(
+                    `heap critical ${sample.heapMb.toFixed(1)}MB (>${criticalMb}MB)` +
+                    ` — LRU cache is empty, no entries to evict`
+                );
+            }
         } else {
             log.error(
                 `heap critical ${sample.heapMb.toFixed(1)}MB — eviction on cooldown,` +
@@ -136,6 +145,10 @@ function runWatchdog(cache: LRUCache): void {
 
 export function startWatchdog(cache: LRUCache): void {
     const interval = env.METRICS_SAMPLE_INTERVAL_MS;
+    // Reset CPU baseline here so the first sample measures only since watchdog start,
+    // not since module import (which could be much earlier during server boot).
+    prevCpuUsage = process.cpuUsage();
+    prevSampleTime = Date.now();
     log.info(`watchdog started (interval=${interval}ms, warn=${env.METRICS_WARN_HEAP_MB}MB, critical=${env.METRICS_CRITICAL_HEAP_MB}MB)`);
     setInterval(() => runWatchdog(cache), interval).unref();
 }
