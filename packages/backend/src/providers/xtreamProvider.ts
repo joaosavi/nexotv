@@ -94,9 +94,15 @@ export async function fetchData(addonInstance: any) {
                 if (customEpgUrl) await validatePublicUrl(epgSource);
                 const epgResp = await withTimeout(epgSource, {}, env.EPG_FETCH_TIMEOUT_MS);
                 if (epgResp.ok) {
-                    const epgContent = await epgResp.text();
-                    addonInstance.epgData = await parseEPG(epgContent, addonInstance.log);
-                    addonInstance.lastEpgUpdate = Date.now();
+                    const contentLength = parseInt(epgResp.headers.get('content-length') ?? '0', 10);
+                    if (contentLength > env.EPG_MAX_BYTES) {
+                        const sizeMb = (contentLength / 1024 / 1024).toFixed(1);
+                        addonInstance.log?.warn(`[EPG] Content-Length too large (${sizeMb} MB), skipping download`);
+                    } else {
+                        const epgContent = await epgResp.text();
+                        addonInstance.epgData = await parseEPG(epgContent, addonInstance.log);
+                        addonInstance.lastEpgUpdate = Date.now();
+                    }
                 }
             } catch {
                 // Ignore EPG errors
