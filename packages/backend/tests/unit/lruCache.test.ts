@@ -112,6 +112,10 @@ describe('LRUCache', () => {
   });
 
   describe('getSize()', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
     it('returns 0 for empty cache', () => {
       expect(cache.getSize()).toBe(0);
     });
@@ -168,6 +172,13 @@ describe('LRUCache', () => {
       const evicted = cache.evictLeastRecentlyUsed(5);
       expect(evicted).toBe(0);
       expect(cache.getSize()).toBe(0);
+    });
+
+    it('returns 0 immediately when n is 0', () => {
+      cache.set('a', 1);
+      const evicted = cache.evictLeastRecentlyUsed(0);
+      expect(evicted).toBe(0);
+      expect(cache.getSize()).toBe(1); // untouched
     });
   });
 });
