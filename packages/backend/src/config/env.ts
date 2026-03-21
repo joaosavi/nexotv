@@ -52,6 +52,9 @@ const env = {
     EPG_FETCH_TIMEOUT_MS: parseInt(process.env.EPG_FETCH_TIMEOUT_MS || '60000', 10),
     PREFETCH_TIMEOUT_MS: parseInt(process.env.PREFETCH_TIMEOUT_MS || '45000', 10),
     LOGO_TIMEOUT_MS: parseInt(process.env.LOGO_TIMEOUT_MS || '10000', 10),
+    METRICS_SAMPLE_INTERVAL_MS: parseInt(process.env.METRICS_SAMPLE_INTERVAL_MS || '30000', 10),
+    METRICS_WARN_HEAP_MB: parseInt(process.env.METRICS_WARN_HEAP_MB || '512', 10),
+    METRICS_CRITICAL_HEAP_MB: parseInt(process.env.METRICS_CRITICAL_HEAP_MB || '768', 10),
 };
 
 export { repoRoot };
