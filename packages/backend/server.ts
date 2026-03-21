@@ -8,6 +8,8 @@ import apiRouter from './src/routes/api';
 import pagesRouter from './src/routes/pages';
 import stremioRouter from './src/routes/stremio';
 import * as sqliteCache from './src/utils/sqliteCache';
+import { buildPromiseCache } from './src/addon/M3UEPGAddon';
+import { startWatchdog, getSnapshot } from './src/utils/metrics';
 
 const app = express();
 // __dirname in compiled output = packages/backend/dist/
@@ -33,7 +35,29 @@ app.use((req, res, next) => {
     next();
 });
 
-app.get('/health', (req, res) => res.json({ status: 'OK', timestamp: new Date().toISOString() }));
+app.get('/health', (req, res) => {
+    const snap = getSnapshot(buildPromiseCache);
+    res.json({
+        status: 'OK',
+        timestamp: new Date().toISOString(),
+        uptime_sec: Math.floor(process.uptime()),
+        process: {
+            heap_mb: snap.heapMb,
+            heap_total_mb: snap.heapTotalMb,
+            rss_mb: snap.rssMb,
+            cpu_percent: snap.cpuPercent,
+        },
+        cache: {
+            lru_size: snap.lruSize,
+            lru_max: snap.lruMax,
+        },
+        watchdog: {
+            spike_flagged: snap.spikeFlagged,
+            last_eviction_at: snap.lastEvictionAt,
+            samples_collected: snap.samplesCollected,
+        },
+    });
+});
 app.get('/favicon.ico', (req, res) => {
     if (fs.existsSync(frontendDist)) {
         res.sendFile(path.join(frontendDist, 'logo', 'addon-logo.png'));
@@ -78,6 +102,8 @@ app.listen(env.PORT, () => {
             }
         }, VACUUM_INTERVAL_MS);
     }
+
+    startWatchdog(buildPromiseCache);
 });
 
 
