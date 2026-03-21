@@ -13,7 +13,8 @@ echo "==> Instalando git hooks em $HOOKS_DIR..."
 # pre-commit: bloqueia arquivos dev-only fora da branch 'dev'
 cat > "$HOOKS_DIR/pre-commit" << 'HOOK'
 #!/bin/sh
-# pre-commit hook: blocks dev-only files from being committed outside 'dev' branch
+# pre-commit hook: blocks dev-only files from being ADDED/MODIFIED outside 'dev' branch
+# Deletions are allowed (e.g. cleaning up a cherry-pick that brought dev-only files in)
 
 CURRENT_BRANCH=$(git symbolic-ref --short HEAD 2>/dev/null)
 
@@ -25,14 +26,15 @@ DEV_ONLY_PATTERNS="CLAUDE.md .claude/ beamup.json tmp/beamup-config tmp/plans"
 
 FOUND=""
 for pattern in $DEV_ONLY_PATTERNS; do
-  if git diff --cached --name-only | grep -q "^$pattern"; then
+  # Only block additions (A) and modifications (M), not deletions (D)
+  if git diff --cached --name-status | grep -E "^[AM]" | awk '{print $2}' | grep -q "^$pattern"; then
     FOUND="$FOUND\n  $pattern"
   fi
 done
 
 if [ -n "$FOUND" ]; then
   echo ""
-  echo "ERROR: Dev-only files staged on branch '$CURRENT_BRANCH':"
+  echo "ERROR: Dev-only files being added/modified on branch '$CURRENT_BRANCH':"
   printf "$FOUND\n"
   echo ""
   echo "These files must only exist on the 'dev' branch."
