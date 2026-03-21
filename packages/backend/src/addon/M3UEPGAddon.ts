@@ -96,6 +96,8 @@ export class M3UEPGAddon {
     _loadPromise: any;
     firstCatalogRefreshDone: boolean;
     firstCatalogRefreshPromise: any;
+    private _consecutiveRefreshFailures = 0;
+    private _refreshFailedAt: number | null = null;
     cacheTtl: number;
     log: ReturnType<typeof makeLogger>;
 
@@ -259,7 +261,20 @@ export class M3UEPGAddon {
         }
     }
 
+    private _getRefreshCooldownMs(): number {
+        if (this._consecutiveRefreshFailures <= 0) return 0;
+        if (this._consecutiveRefreshFailures === 1) return 60_000;      // 1 min
+        if (this._consecutiveRefreshFailures === 2) return 5 * 60_000;  // 5 min
+        return 30 * 60_000;                                              // 30 min
+    }
+
     async refreshOnFirstCatalogRequest() {
+        // Exponential backoff: don't hammer a failing provider
+        if (this._refreshFailedAt !== null) {
+            const cooldown = this._getRefreshCooldownMs();
+            if (Date.now() - this._refreshFailedAt < cooldown) return;
+        }
+
         if (this.firstCatalogRefreshDone) return;
         if (this.firstCatalogRefreshPromise) {
             await this.firstCatalogRefreshPromise;
@@ -294,6 +309,12 @@ export class M3UEPGAddon {
 
         try {
             await this.firstCatalogRefreshPromise;
+            this._consecutiveRefreshFailures = 0;  // reset on success
+            this._refreshFailedAt = null;
+        } catch (e) {
+            this._consecutiveRefreshFailures++;
+            this._refreshFailedAt = Date.now();
+            throw e;
         } finally {
             this.firstCatalogRefreshPromise = null;
         }
