@@ -49,6 +49,22 @@ class LRUCache {
     clear() {
         this.map.clear();
     }
+
+    getSize(): number {
+        return this.map.size;
+    }
+
+    evictLeastRecentlyUsed(n: number): number {
+        // Map maintains insertion order; LRU entries are at the front.
+        // Promote-on-get moves accessed entries to the end, so front = oldest.
+        let evicted = 0;
+        for (const key of this.map.keys()) {
+            if (evicted >= n) break;
+            this.map.delete(key);
+            evicted++;
+        }
+        return evicted;
+    }
 }
 
 export default LRUCache;
