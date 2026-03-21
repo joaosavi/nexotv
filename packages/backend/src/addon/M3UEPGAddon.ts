@@ -98,6 +98,8 @@ export class M3UEPGAddon {
     firstCatalogRefreshPromise: any;
     private _consecutiveRefreshFailures = 0;
     private _refreshFailedAt: number | null = null;
+    private _timerConsecutiveFailures = 0;
+    private _timerPausedUntil: number | null = null;
     cacheTtl: number;
     log: ReturnType<typeof makeLogger>;
 
@@ -434,7 +436,18 @@ export class M3UEPGAddon {
     private _startUpdateTimer() {
         if (this._updateTimer !== null) return; // already running — guard against double-start
         this._updateTimer = setInterval(() => {
-            this.updateData().catch((e: any) => {
+            // Skip if circuit is open
+            if (this._timerPausedUntil !== null && Date.now() < this._timerPausedUntil) return;
+
+            this.updateData().then(() => {
+                this._timerConsecutiveFailures = 0;
+                this._timerPausedUntil = null;
+            }).catch((e: any) => {
+                this._timerConsecutiveFailures++;
+                if (this._timerConsecutiveFailures >= 3) {
+                    this._timerPausedUntil = Date.now() + 30 * 60_000; // pause 30 min
+                    this.log.warn(`[TIMER] Circuit open after ${this._timerConsecutiveFailures} failures, pausing 30 min`);
+                }
                 this.log.error('[TIMER] Background update failed:', e.message);
             });
         }, env.UPDATE_INTERVAL_MS);
