@@ -110,4 +110,75 @@ describe('LRUCache', () => {
     vi.advanceTimersByTime(5001);
     expect(timedCache.get('x')).toBeUndefined();
   });
+
+  describe('getSize()', () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('returns 0 for empty cache', () => {
+      expect(cache.getSize()).toBe(0);
+    });
+
+    it('returns correct count after sets', () => {
+      cache.set('a', 1);
+      cache.set('b', 2);
+      expect(cache.getSize()).toBe(2);
+    });
+
+    it('counts TTL-expired entries that have not been lazy-evicted', () => {
+      vi.useFakeTimers();
+      cache.set('a', 1);
+      vi.advanceTimersByTime(1001); // TTL expired
+      // 'a' not accessed, so still in map
+      expect(cache.getSize()).toBe(1);
+    });
+  });
+
+  describe('evictLeastRecentlyUsed()', () => {
+    it('removes the n oldest entries', () => {
+      cache.set('a', 1);
+      cache.set('b', 2);
+      cache.set('c', 3);
+      const evicted = cache.evictLeastRecentlyUsed(2);
+      expect(evicted).toBe(2);
+      expect(cache.getSize()).toBe(1);
+      // 'a' and 'b' are oldest (insertion order), 'c' stays
+      expect(cache.get('a')).toBeUndefined();
+      expect(cache.get('b')).toBeUndefined();
+      expect(cache.get('c')).toBe(3);
+    });
+
+    it('respects LRU order — promoted entries are not evicted first', () => {
+      cache.set('a', 1);
+      cache.set('b', 2);
+      cache.set('c', 3);
+      cache.get('a'); // promotes 'a' to most-recent → order: b, c, a
+      const evicted = cache.evictLeastRecentlyUsed(1);
+      expect(evicted).toBe(1);
+      expect(cache.get('b')).toBeUndefined(); // 'b' is now oldest
+      expect(cache.get('a')).toBe(1);         // 'a' was promoted — survives
+      expect(cache.get('c')).toBe(3);
+    });
+
+    it('returns actual evicted count when n exceeds cache size', () => {
+      cache.set('a', 1);
+      const evicted = cache.evictLeastRecentlyUsed(10);
+      expect(evicted).toBe(1); // only 1 entry existed
+      expect(cache.getSize()).toBe(0);
+    });
+
+    it('returns 0 and is a no-op on empty cache', () => {
+      const evicted = cache.evictLeastRecentlyUsed(5);
+      expect(evicted).toBe(0);
+      expect(cache.getSize()).toBe(0);
+    });
+
+    it('returns 0 immediately when n is 0', () => {
+      cache.set('a', 1);
+      const evicted = cache.evictLeastRecentlyUsed(0);
+      expect(evicted).toBe(0);
+      expect(cache.getSize()).toBe(1); // untouched
+    });
+  });
 });
