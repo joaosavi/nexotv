@@ -33,6 +33,7 @@ export interface M3uConfig {
   epgUrl?: string;
   epgOffsetHours?: number;
   reformatLogos: boolean;
+  globalUserAgent?: string;
 }
 
 export type AddonConfig = (XtreamConfig | IptvOrgConfig | M3uConfig) & { catalogName?: string };

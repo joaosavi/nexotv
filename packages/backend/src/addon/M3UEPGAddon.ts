@@ -38,6 +38,7 @@ export interface AddonConfig {
     iptvOrgCategory?: string;
     instanceId?: string;
     catalogName?: string;
+    globalUserAgent?: string;
 }
 
 function stableStringify(obj: any) {
@@ -61,6 +62,7 @@ export function createCacheKey(config: AddonConfig) {
             epgUrl: config.epgUrl || null,
             epgOffsetHours: config.epgOffsetHours,
             reformatLogos: !!config.reformatLogos,
+            globalUserAgent: config.globalUserAgent || null,
         };
     } else {
         minimal = {
