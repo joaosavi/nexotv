@@ -37,6 +37,7 @@ export interface AddonConfig {
     iptvOrgCountry?: string;
     iptvOrgCategory?: string;
     instanceId?: string;
+    catalogName?: string;
 }
 
 function stableStringify(obj: any) {

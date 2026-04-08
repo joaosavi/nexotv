@@ -62,6 +62,16 @@
       </div>
     </fieldset>
 
+    <fieldset>
+      <legend>Display</legend>
+      <div class="form-group">
+        <label for="catalogName">Catalog Name</label>
+        <input type="text" id="catalogName" v-model="form.catalogName"
+          :placeholder="addonName">
+        <small class="hint">Name shown in Stremio's channel list. Leave blank to use the default.</small>
+      </div>
+    </fieldset>
+
     <div class="form-actions">
       <button type="submit" class="btn primary">
         Install Addon
@@ -77,9 +87,12 @@
 <script setup lang="ts">
 import { reactive, ref, inject, onMounted } from 'vue'
 import { useDecodedToken } from '../composables/useDecodedToken'
+import { useAddonInfo } from '../composables/useAddonInfo'
 import type { XtreamConfig } from '../types/config'
 
 const oc = inject<any>('overlayControl')!
+const { info: addonInfo } = useAddonInfo()
+const addonName = addonInfo.value?.name ?? 'NexoTV'
 
 const showPwd = ref(false)
 let originalPassword = ''
@@ -93,6 +106,7 @@ const form = reactive({
   customEpgUrl: '',
   epgOffsetHours: 0,
   reformatLogos: false,
+  catalogName: '',
 })
 
 onMounted(() => {
@@ -112,6 +126,7 @@ onMounted(() => {
   }
   form.epgOffsetHours = d.epgOffsetHours ?? 0
   form.reformatLogos = !!d.reformatLogos
+  form.catalogName = (decodedConfig as any).catalogName || ''
 })
 
 function validateUrl(u: string) {
@@ -298,6 +313,7 @@ async function handleSubmit() {
       epgSource: enableEpgFinal ? (epgMode === 'custom' ? 'custom' : 'xtream') : 'disabled'
     }
     config.instanceId = uuid()
+    if (form.catalogName.trim()) (config as any).catalogName = form.catalogName.trim()
 
     const passHash = await sha256Fragment(password)
     oc.appendDetail(`Password hash fragment: ${passHash}`)

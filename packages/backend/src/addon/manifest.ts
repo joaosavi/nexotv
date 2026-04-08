@@ -1,6 +1,6 @@
 import env from '../config/env';
 
-export function createManifest(idPrefix?: string) {
+export function createManifest(idPrefix?: string, catalogName?: string) {
     return {
         id: 'community.nexotv',
         version: '2.0.0',
@@ -12,7 +12,7 @@ export function createManifest(idPrefix?: string) {
             {
                 type: 'tv',
                 id: 'iptv_channels',
-                name: env.ADDON_NAME,
+                name: catalogName || env.ADDON_NAME,
                 extra: [
                     { name: 'genre', isRequired: true, options: [] },
                     { name: 'search', isRequired: false },

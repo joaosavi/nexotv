@@ -11,7 +11,7 @@ async function createAddon(config: AddonConfig) {
 
     const cacheKey = createCacheKey(config);
     const idPrefix = cacheKey.slice(0, 8);
-    const manifest = createManifest(idPrefix);
+    const manifest = createManifest(idPrefix, config.catalogName);
     const debugFlag = !!env.DEBUG;
     if (debugFlag) {
         console.log('[DEBUG] createAddon start', { cacheKey, provider: config.provider || 'xtream' });

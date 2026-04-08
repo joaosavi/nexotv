@@ -88,6 +88,16 @@
       </div>
     </fieldset>
 
+    <fieldset>
+      <legend>Display</legend>
+      <div class="form-group">
+        <label for="m3uCatalogName">Catalog Name</label>
+        <input type="text" id="m3uCatalogName" v-model="form.catalogName"
+          placeholder="NexoTV">
+        <small class="hint">Name shown in Stremio's channel list. Leave blank to use the default.</small>
+      </div>
+    </fieldset>
+
     <div class="form-actions">
       <button class="btn primary" type="button" @click="handleInstall">
         Install Addon
@@ -116,6 +126,7 @@ const form = reactive({
   customEpgUrl: '',
   epgOffsetHours: 0,
   reformatLogos: false,
+  catalogName: '',
 })
 
 onMounted(() => {
@@ -130,6 +141,7 @@ onMounted(() => {
   }
   form.epgOffsetHours = d.epgOffsetHours ?? 0
   form.reformatLogos = !!d.reformatLogos
+  form.catalogName = (decodedConfig as any).catalogName || ''
 })
 
 async function handleInstall() {
@@ -144,13 +156,14 @@ async function handleInstall() {
   const customEpgUrl = form.epgMode === 'custom' ? form.customEpgUrl.trim() : ''
   const epgOffsetHours = form.epgOffsetHours || 0
 
-  const config: M3uConfig = {
+  const config: M3uConfig & { catalogName?: string } = {
     provider: 'm3u',
     m3uUrl,
     enableEpg,
     reformatLogos: form.reformatLogos,
     ...(enableEpg && epgOffsetHours !== 0 ? { epgOffsetHours } : {}),
     ...(enableEpg && customEpgUrl ? { epgUrl: customEpgUrl } : {}),
+    ...(form.catalogName.trim() ? { catalogName: form.catalogName.trim() } : {}),
   }
 
   oc.showOverlay(false)
