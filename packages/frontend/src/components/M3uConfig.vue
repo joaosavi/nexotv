@@ -89,6 +89,39 @@
     </fieldset>
 
     <fieldset>
+      <legend>Advanced</legend>
+      <div class="form-group">
+        <label class="group-label">Global User-Agent
+          <span class="hint"> — leave blank unless your provider requires a specific player</span>
+        </label>
+        <div class="playlist-chips">
+          <button
+            v-for="p in USER_AGENT_PRESETS"
+            :key="p.value"
+            type="button"
+            class="playlist-chip"
+            :class="{ active: form.userAgentPreset === p.value }"
+            @click="selectPreset(p.value)"
+          >
+            <span class="chip-label">{{ p.label }}</span>
+          </button>
+          <button
+            type="button"
+            class="playlist-chip"
+            :class="{ active: form.userAgentPreset === 'custom' }"
+            @click="selectPreset('custom')"
+          >
+            <span class="chip-label">Custom…</span>
+          </button>
+        </div>
+        <input v-if="form.userAgentPreset === 'custom'" type="text" id="m3uGlobalUserAgent"
+          v-model="form.globalUserAgent" placeholder="e.g. MyPlayer/1.0"
+          style="margin-top: 0.5rem">
+        <small class="hint">Channels with their own User-Agent in the playlist take priority over this setting.</small>
+      </div>
+    </fieldset>
+
+    <fieldset>
       <legend>Display</legend>
       <div class="form-group">
         <label for="m3uCatalogName">Catalog Name</label>
@@ -119,6 +152,14 @@ import type { M3uConfig } from '../types/config'
 const oc = inject<any>('overlayControl')!
 const { playlists } = usePublicPlaylists()
 
+const USER_AGENT_PRESETS = [
+  { label: 'TiviMate',         value: 'TiviMate/4.7.0 (Android)' },
+  { label: 'IPTV Smarters Pro', value: 'IPTV Smarters Pro' },
+  { label: 'GSE Smart IPTV',   value: 'GSE/7.6 CFNetwork/1410.1 Darwin/22.6.0' },
+  { label: 'VLC',              value: 'VLC/3.0.18 LibVLC/3.0.18' },
+  { label: 'Kodi',             value: 'Kodi/21.0 (X11; Linux x86_64) App_Bitness/64 Version/21.0' },
+]
+
 const form = reactive({
   m3uUrl: '',
   enableEpg: false,
@@ -127,7 +168,20 @@ const form = reactive({
   epgOffsetHours: 0,
   reformatLogos: false,
   catalogName: '',
+  userAgentPreset: '',
+  globalUserAgent: '',
 })
+
+function selectPreset(value: string) {
+  if (form.userAgentPreset === value) {
+    // toggle off
+    form.userAgentPreset = ''
+    form.globalUserAgent = ''
+    return
+  }
+  form.userAgentPreset = value
+  form.globalUserAgent = value !== 'custom' ? value : ''
+}
 
 onMounted(() => {
   const { decodedConfig } = useDecodedToken()
@@ -142,6 +196,12 @@ onMounted(() => {
   form.epgOffsetHours = d.epgOffsetHours ?? 0
   form.reformatLogos = !!d.reformatLogos
   form.catalogName = (decodedConfig as any).catalogName || ''
+  const savedUa = d.globalUserAgent || ''
+  if (savedUa) {
+    const match = USER_AGENT_PRESETS.find(p => p.value === savedUa)
+    form.userAgentPreset = match ? match.value : 'custom'
+    form.globalUserAgent = savedUa
+  }
 })
 
 async function handleInstall() {
@@ -164,6 +224,7 @@ async function handleInstall() {
     ...(enableEpg && epgOffsetHours !== 0 ? { epgOffsetHours } : {}),
     ...(enableEpg && customEpgUrl ? { epgUrl: customEpgUrl } : {}),
     ...(form.catalogName.trim() ? { catalogName: form.catalogName.trim() } : {}),
+    ...(form.globalUserAgent.trim() ? { globalUserAgent: form.globalUserAgent.trim() } : {}),
   }
 
   oc.showOverlay(false)

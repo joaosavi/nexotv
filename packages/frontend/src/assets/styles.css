@@ -661,6 +661,12 @@ input[type="radio"]:checked::after {
 .chip-label { font-size: 0.875rem; font-weight: 500; }
 .chip-note  { font-size: 0.75rem; color: var(--text-2); }
 
+.playlist-chip.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent-2);
+}
+
 /* ═══════════════════════════════════════════════════════════
    About Card (sidebar)
 ═══════════════════════════════════════════════════════════ */
