@@ -64,7 +64,6 @@
           </ul>
           <div class="credits">
             <p>By <a href="https://github.com/joaosavi" target="_blank" rel="noopener">joaosavi</a></p>
-            <p>Thanks to <a href="https://github.com/Inside4ndroid" target="_blank" rel="noopener">Inside4ndroid</a></p>
           </div>
         </div>
       </section>
