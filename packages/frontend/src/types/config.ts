@@ -35,7 +35,7 @@ export interface M3uConfig {
   reformatLogos: boolean;
 }
 
-export type AddonConfig = XtreamConfig | IptvOrgConfig | M3uConfig;
+export type AddonConfig = (XtreamConfig | IptvOrgConfig | M3uConfig) & { catalogName?: string };
 
 export interface AddonInfo {
   name: string;

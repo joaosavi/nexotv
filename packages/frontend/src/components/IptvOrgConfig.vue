@@ -66,6 +66,16 @@
       </div>
     </fieldset>
 
+    <fieldset>
+      <legend>Display</legend>
+      <div class="form-group">
+        <label for="iptvCatalogName">Catalog Name</label>
+        <input type="text" id="iptvCatalogName" v-model="catalogName"
+          placeholder="NexoTV">
+        <small class="hint">Name shown in Stremio's channel list. Leave blank to use the default.</small>
+      </div>
+    </fieldset>
+
     <div class="form-actions">
       <button type="submit" class="btn primary" id="iptv-org-submit">
         Install Addon
@@ -84,6 +94,7 @@ import { useDecodedToken } from '../composables/useDecodedToken'
 import type { IptvOrgConfig } from '../types/config'
 
 const oc = inject<any>('overlayControl')!
+const catalogName = ref('')
 
 const IPTV_ORG_BASE = 'https://iptv-org.github.io/api'
 
@@ -218,6 +229,7 @@ onMounted(async () => {
           .map(cat => allCategories.value.find(c => c.value === cat))
           .filter(Boolean) as SelectItem[]
       }
+      catalogName.value = (decodedConfig as any).catalogName || ''
     }
   } catch (err) {
     console.error('[IPTV-ORG] Failed to load countries/categories', err)
@@ -236,10 +248,11 @@ async function handleSubmit() {
   oc.appendDetail('Note: channel data will be fetched & cached on first access (may take a few seconds).')
 
   try {
-    const config: IptvOrgConfig = {
+    const config: IptvOrgConfig & { catalogName?: string } = {
       provider: 'iptv-org',
       iptvOrgCountry: country,
       iptvOrgCategory: category,
+      ...(catalogName.value.trim() ? { catalogName: catalogName.value.trim() } : {}),
     }
 
     oc.setProgress(40, 'Building token')
