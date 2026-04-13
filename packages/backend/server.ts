@@ -80,6 +80,16 @@ app.use((error: any, req: any, res: any, next: any) => {
 app.listen(env.PORT, () => {
     console.log(`🚀 Server running → http://localhost:${env.PORT} (debug=${env.DEBUG}, prefetch=${env.PREFETCH_ENABLED})`);
 
+    if (process.env.CLEAR_CACHE_ON_START === 'true') {
+        try {
+            sqliteCache.cleanExpired();
+            sqliteCache.vacuum();
+            console.log('[STARTUP] CLEAR_CACHE_ON_START: SQLite cache cleared and vacuumed');
+        } catch (e: any) {
+            console.error('[STARTUP] CLEAR_CACHE_ON_START failed:', e.message);
+        }
+    }
+
     if (env.CACHE_ENABLED) {
         const GC_INTERVAL_MS = env.SQLITE_GC_INTERVAL_MS;
         const VACUUM_INTERVAL_MS = env.SQLITE_VACUUM_INTERVAL_MS;
