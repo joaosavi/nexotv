@@ -23,6 +23,8 @@ export function init(dbPath: string | null) {
         db = new Database(resolvedPath);
         db.pragma('journal_mode = WAL');
         db.pragma('synchronous = NORMAL');
+        db.pragma('cache_size = -2048');  // 2MB page cache (default is ~2000 pages ≈ 8MB+)
+        db.pragma('mmap_size = 0');       // disable memory-mapped I/O to reduce RSS
     } catch {
         // SQLite fails on Windows bind mounts in Docker (SQLITE_IOERR_SHMOPEN).
         // Fall back to in-memory cache — safe since this is pure cache (no primary data).
