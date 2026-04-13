@@ -2,6 +2,7 @@ class LRUCache {
     max: number;
     ttl: number;
     map: Map<string, { value: any; expires: number | null }>;
+    onEvict?: (key: string, value: any) => void;
 
     constructor({ max = 100, ttl = 6 * 3600 * 1000 } = {}) {
         this.max = max;
@@ -30,7 +31,9 @@ class LRUCache {
         // Evict LRU
         if (this.map.size > this.max) {
             const oldestKey = this.map.keys().next().value;
+            const oldestEntry = this.map.get(oldestKey)!;
             this.map.delete(oldestKey);
+            this.onEvict?.(oldestKey, oldestEntry.value);
         }
     }
 
@@ -67,7 +70,9 @@ class LRUCache {
         let evicted = 0;
         for (const key of keys) {
             if (evicted >= n) break;
+            const entry = this.map.get(key)!;
             this.map.delete(key);
+            this.onEvict?.(key, entry.value);
             evicted++;
         }
         return evicted;

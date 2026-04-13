@@ -103,6 +103,14 @@ app.listen(env.PORT, () => {
         }, VACUUM_INTERVAL_MS);
     }
 
+    // When an addon is evicted from LRU (watchdog or overflow), free its in-memory data
+    // and stop its background timers so GC can reclaim the memory.
+    buildPromiseCache.onEvict = (_key, promise) => {
+        Promise.resolve(promise).then((iface: any) => {
+            iface?.addonInstance?._evictFromMemory();
+        }).catch(() => {});
+    };
+
     startWatchdog(buildPromiseCache);
 });
 
