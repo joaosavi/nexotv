@@ -55,6 +55,7 @@ const env = {
     METRICS_SAMPLE_INTERVAL_MS: parseInt(process.env.METRICS_SAMPLE_INTERVAL_MS || '30000', 10),
     METRICS_WARN_HEAP_MB: parseInt(process.env.METRICS_WARN_HEAP_MB || '512', 10),
     METRICS_CRITICAL_HEAP_MB: parseInt(process.env.METRICS_CRITICAL_HEAP_MB || '768', 10),
+    ADMIN_SECRET: process.env.ADMIN_SECRET || null,
 };
 
 export { repoRoot };

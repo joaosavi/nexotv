@@ -52,6 +52,30 @@ router.get('/api/public-playlists', (req, res) => {
     }
 });
 
+import * as sqliteCache from '../utils/sqliteCache';
+import { buildPromiseCache } from '../addon/M3UEPGAddon';
+
+router.post('/api/admin/clear-cache', (req, res) => {
+    if (!env.ADMIN_SECRET) {
+        return res.status(404).json({ error: 'Not found' });
+    }
+    const secret = req.headers['x-admin-secret'] || req.query.secret;
+    if (secret !== env.ADMIN_SECRET) {
+        return res.status(403).json({ error: 'Forbidden' });
+    }
+    try {
+        // Evict all in-memory addon instances first so their timers are stopped
+        const lruSize = buildPromiseCache.getSize();
+        buildPromiseCache.evictLeastRecentlyUsed(lruSize);
+        // Clear and vacuum SQLite
+        const deleted = sqliteCache.cleanExpired();
+        sqliteCache.vacuum();
+        res.json({ ok: true, lruEvicted: lruSize, sqliteExpiredDeleted: deleted });
+    } catch (e: any) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 import prefetchRouter from './prefetch';
 router.use(prefetchRouter);
 
